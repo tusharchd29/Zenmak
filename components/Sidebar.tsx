@@ -38,11 +38,11 @@ export function Sidebar({ session }: { session: Session }) {
     <aside className="hidden md:flex md:flex-col md:w-64 md:shrink-0 border-r border-[var(--border)] bg-white h-screen sticky top-0">
       <div className="px-5 py-5 flex items-center gap-3 border-b border-[var(--border)]">
         <div className="w-9 h-9 rounded-xl bg-[var(--teal)] flex items-center justify-center text-white font-bold text-sm">
-          AV
+          OV
         </div>
         <div className="flex-1">
           <div className="font-semibold text-[var(--ink)] leading-tight">
-            Allvet
+            Olvet
           </div>
           <div className="text-xs text-[var(--muted)] leading-tight">
             Field Ops

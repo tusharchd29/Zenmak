@@ -45,9 +45,9 @@ export default function LoginPage() {
       <div className="w-full max-w-xs">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-[var(--teal)] flex items-center justify-center text-white text-xl font-bold mb-4">
-            AV
+            OV
           </div>
-          <h1 className="text-xl font-semibold text-[var(--ink)]">Allvet</h1>
+          <h1 className="text-xl font-semibold text-[var(--ink)]">Olvet</h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             Enter your 4-digit PIN
           </p>
