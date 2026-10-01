@@ -26,6 +26,7 @@ export const GROWTH_NAV: NavItem[] = [
   { href: "/brochures", label: "Brochures", icon: "book-open" },
   { href: "/reports", label: "Reports", icon: "bar-chart-3" },
   { href: "/team", label: "Team", icon: "user-cog", ownerOnly: true },
+  { href: "/zones", label: "Zones & States", icon: "compass", ownerOnly: true },
 ];
 
 export const MOBILE_PRIMARY: NavItem[] = [
