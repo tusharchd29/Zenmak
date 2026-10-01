@@ -14,6 +14,7 @@ export async function createCustomer(formData: FormData) {
   const address = String(formData.get("address") || "").trim() || null;
   const segment = String(formData.get("segment") || "").trim() || null;
   const zone = String(formData.get("zone") || "").trim() || null;
+  const state = String(formData.get("state") || "").trim() || null;
   const latRaw = String(formData.get("latitude") || "").trim();
   const lngRaw = String(formData.get("longitude") || "").trim();
   const latitude = latRaw ? Number(latRaw) : null;
@@ -31,6 +32,7 @@ export async function createCustomer(formData: FormData) {
     address,
     segment,
     zone,
+    state,
     latitude,
     longitude,
     rep_id: session.userId,

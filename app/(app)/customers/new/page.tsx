@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { LocationCapture } from "@/components/LocationCapture";
 import { Autocomplete } from "@/components/Autocomplete";
-import { ZONES, ZONE_LABEL } from "@/lib/utils";
+import { ZoneStateSelect } from "@/components/ZoneStateSelect";
+import { getStatesByZone } from "@/lib/data";
 import { createCustomer } from "../actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
@@ -16,10 +17,10 @@ export default async function NewCustomerPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const { data: segments } = await supabaseAdmin
-    .from("av_segments")
-    .select("name")
-    .order("name");
+  const [{ data: segments }, statesByZone] = await Promise.all([
+    supabaseAdmin.from("av_segments").select("name").order("name"),
+    getStatesByZone(),
+  ]);
 
   return (
     <div>
@@ -54,19 +55,7 @@ export default async function NewCustomerPage() {
               options={(segments ?? []).map((s) => s.name)}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Zone
-            </label>
-            <select name="zone" className="input-field" defaultValue="">
-              <option value="">No zone</option>
-              {ZONES.map((z) => (
-                <option key={z} value={z}>
-                  {ZONE_LABEL[z]}
-                </option>
-              ))}
-            </select>
-          </div>
+          <ZoneStateSelect statesByZone={statesByZone} />
           <LocationCapture label="Location" />
           <SubmitButton>Save customer</SubmitButton>
         </ActionForm>

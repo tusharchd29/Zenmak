@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getRepScope } from "@/lib/data";
+import { getRepScope, getStatesByZone } from "@/lib/data";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusPill } from "@/components/StatusPill";
@@ -23,16 +23,16 @@ export default async function CustomerDetailPage({
 
   let customerQuery = supabaseAdmin
     .from("av_customers")
-    .select("id, name, phone, address, segment, zone, rep_id")
+    .select("id, name, phone, address, segment, zone, state, rep_id")
     .eq("id", id);
   if (repId) customerQuery = customerQuery.eq("rep_id", repId);
   const { data: customer } = await customerQuery.maybeSingle();
 
   if (!customer) notFound();
 
-  // These three don't depend on each other, so run them in parallel rather
-  // than paying for three round trips back to back.
-  const [{ data: visits }, { data: orders }, { data: contacts }] = await Promise.all([
+  // These don't depend on each other, so run them in parallel rather than
+  // paying for round trips back to back.
+  const [{ data: visits }, { data: orders }, { data: contacts }, statesByZone] = await Promise.all([
     supabaseAdmin
       .from("av_visits")
       .select("id, visit_date, purpose, discussion_summary")
@@ -48,6 +48,7 @@ export default async function CustomerDetailPage({
       .select("id, name, role, phone")
       .eq("customer_id", id)
       .order("created_at", { ascending: true }),
+    getStatesByZone(),
   ]);
 
   // This one genuinely depends on the order IDs above, so it stays after.
@@ -61,7 +62,7 @@ export default async function CustomerDetailPage({
     <div>
       <PageHeader title={customer.name} subtitle={customer.segment ?? "General"} />
 
-      <CustomerEditForm customer={customer} />
+      <CustomerEditForm customer={customer} statesByZone={statesByZone} />
 
       <CustomerContacts customerId={id} contacts={contacts ?? []} />
 

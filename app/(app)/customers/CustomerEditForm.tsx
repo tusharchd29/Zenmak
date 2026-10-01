@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
-import { ZONES, ZONE_LABEL } from "@/lib/utils";
+import { ZONE_LABEL, type Zone } from "@/lib/utils";
+import { ZoneStateSelect } from "@/components/ZoneStateSelect";
 import { updateEntry } from "../_shared/actions";
 
 export type EditableCustomer = {
@@ -13,9 +14,16 @@ export type EditableCustomer = {
   address: string | null;
   segment: string | null;
   zone: string | null;
+  state: string | null;
 };
 
-export function CustomerEditForm({ customer }: { customer: EditableCustomer }) {
+export function CustomerEditForm({
+  customer,
+  statesByZone,
+}: {
+  customer: EditableCustomer;
+  statesByZone: Record<Zone, string[]>;
+}) {
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState({
     name: customer.name,
@@ -23,6 +31,7 @@ export function CustomerEditForm({ customer }: { customer: EditableCustomer }) {
     address: customer.address ?? "",
     segment: customer.segment ?? "",
     zone: customer.zone ?? "",
+    state: customer.state ?? "",
   });
   const [saved, setSaved] = useState(customer);
   const [pending, startTransition] = useTransition();
@@ -45,8 +54,9 @@ export function CustomerEditForm({ customer }: { customer: EditableCustomer }) {
             address: values.address.trim() || null,
             segment: values.segment.trim() || null,
             zone: values.zone || null,
+            state: values.state || null,
           },
-          ["/customers", `/customers/${customer.id}`, "/map", "/dashboard"],
+          ["/customers", `/customers/${customer.id}`, "/map", "/dashboard", "/tours"],
         );
         setSaved({
           ...customer,
@@ -55,6 +65,7 @@ export function CustomerEditForm({ customer }: { customer: EditableCustomer }) {
           address: values.address.trim() || null,
           segment: values.segment.trim() || null,
           zone: values.zone || null,
+          state: values.state || null,
         });
         setEditing(false);
       } catch (e) {
@@ -79,6 +90,7 @@ export function CustomerEditForm({ customer }: { customer: EditableCustomer }) {
             <div>
               <span className="text-[var(--muted)]">Zone: </span>
               {saved.zone ? ZONE_LABEL[saved.zone as keyof typeof ZONE_LABEL] ?? saved.zone : "—"}
+              {saved.state && <span className="text-[var(--muted)]"> · {saved.state}</span>}
             </div>
           </div>
           <button
@@ -129,21 +141,13 @@ export function CustomerEditForm({ customer }: { customer: EditableCustomer }) {
             onChange={(e) => setValues((v) => ({ ...v, segment: e.target.value }))}
           />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-[var(--ink)] mb-1">Zone</label>
-          <select
-            className="input-field text-sm"
-            value={values.zone}
-            onChange={(e) => setValues((v) => ({ ...v, zone: e.target.value }))}
-          >
-            <option value="">No zone</option>
-            {ZONES.map((z) => (
-              <option key={z} value={z}>
-                {ZONE_LABEL[z]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <ZoneStateSelect
+          statesByZone={statesByZone}
+          zoneValue={values.zone}
+          stateValue={values.state}
+          onZoneChange={(zone) => setValues((v) => ({ ...v, zone, state: "" }))}
+          onStateChange={(state) => setValues((v) => ({ ...v, state }))}
+        />
         {error && <div className="text-xs text-red-600">{error}</div>}
         <div className="flex gap-2">
           <button type="button" onClick={save} disabled={pending} className="btn-primary text-xs px-4 py-1.5">
@@ -158,6 +162,7 @@ export function CustomerEditForm({ customer }: { customer: EditableCustomer }) {
                 address: saved.address ?? "",
                 segment: saved.segment ?? "",
                 zone: saved.zone ?? "",
+                state: saved.state ?? "",
               });
               setError(null);
               setEditing(false);

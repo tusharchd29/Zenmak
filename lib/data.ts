@@ -3,6 +3,7 @@ import type { Session } from "./session";
 import type { DateRange } from "./date-range";
 import { dayStart, dayEnd } from "./date-range";
 import { getEffectiveTargets } from "./targets";
+import { ZONES, type Zone } from "./utils";
 
 function currentMonthStart() {
   return `${new Date().toISOString().slice(0, 7)}-01`;
@@ -10,6 +11,19 @@ function currentMonthStart() {
 
 export function getRepScope(session: Session) {
   return session.role === "owner" ? null : session.userId;
+}
+
+/** Every state grouped under its zone, from the av_zone_states reference
+ * table — used wherever a zone selection needs to offer "which states" as
+ * a follow-up (the customer form's state field, a tour's state checklist). */
+export async function getStatesByZone(): Promise<Record<Zone, string[]>> {
+  const { data } = await supabaseAdmin.from("av_zone_states").select("state, zone").order("state");
+  const byZone = Object.fromEntries(ZONES.map((z) => [z, [] as string[]])) as Record<Zone, string[]>;
+  for (const row of data ?? []) {
+    const list = byZone[row.zone as Zone];
+    if (list) list.push(row.state);
+  }
+  return byZone;
 }
 
 export async function getDashboardStats(session: Session, range?: DateRange) {
