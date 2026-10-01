@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getRepScope, getStatesByZone } from "@/lib/data";
+import { getRepScope, getStatesByZone, getLastVisitByCustomer } from "@/lib/data";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
@@ -14,6 +14,7 @@ import { TourStops, type Stop } from "./TourStops";
 import { TourPlanZoneFields } from "./TourPlanZoneFields";
 import { TourStatesEditor } from "./TourStatesEditor";
 import { MapView } from "../map/MapView";
+import { ShareTourButton } from "./ShareTourButton";
 
 export const dynamic = "force-dynamic";
 
@@ -46,28 +47,94 @@ export default async function ToursPage() {
   const { data: allStops } = tourIds.length
     ? await supabaseAdmin
         .from("av_tour_stops")
-        .select("id, tour_id, customer_id, planned_date, notes, completed, av_customers(name)")
+        .select(
+          "id, tour_id, customer_id, planned_date, notes, completed, sort_order, av_customers(name, latitude, longitude)",
+        )
         .in("tour_id", tourIds)
         .order("planned_date", { ascending: true })
+        .order("sort_order", { ascending: true })
     : { data: [] as never[] };
+
+  // Last-visit date for every customer that could show up in a stop picker —
+  // used to surface overdue customers first (feature: suggest overdue
+  // customers). Fetched once for the whole page rather than per tour.
+  const lastVisitByCustomer = await getLastVisitByCustomer((allCustomers ?? []).map((c) => c.id));
 
   const stopsByTour = new Map<string, Stop[]>();
   for (const s of allStops ?? []) {
     const list = stopsByTour.get(s.tour_id) ?? [];
+    // @ts-expect-error joined relation
+    const joinedCustomer = s.av_customers as { name: string; latitude: number | null; longitude: number | null } | null;
     list.push({
       id: s.id,
-      // @ts-expect-error joined relation
-      customerName: s.av_customers?.name ?? null,
+      customer_id: s.customer_id,
+      customerName: joinedCustomer?.name ?? null,
+      latitude: joinedCustomer?.latitude ?? null,
+      longitude: joinedCustomer?.longitude ?? null,
       planned_date: s.planned_date,
       notes: s.notes,
       completed: s.completed,
+      sort_order: s.sort_order,
     });
     stopsByTour.set(s.tour_id, list);
+  }
+
+  // Owner-only: one map showing every rep's planned stops at once, pins
+  // colored per rep with a legend — so the owner can see the whole team's
+  // territory coverage for the period at a glance, not tour by tour.
+  type TeamMapCustomer = { id: string; name: string; latitude: number; longitude: number; zone: string | null; segment: string | null; color: string };
+  const TEAM_MAP_PALETTE = ["#028090", "#c0392b", "#5a3d99", "#e67e22", "#16a34a", "#d946ef", "#0ea5e9", "#78350f"];
+  let teamMap: { customers: TeamMapCustomer[]; legend: Array<{ repId: string; name: string; color: string }> } | null = null;
+  if (session.role === "owner") {
+    const repColor = new Map<string, string>();
+    const legend: Array<{ repId: string; name: string; color: string }> = [];
+    for (const t of tours ?? []) {
+      if (repColor.has(t.rep_id)) continue;
+      const color = TEAM_MAP_PALETTE[repColor.size % TEAM_MAP_PALETTE.length];
+      repColor.set(t.rep_id, color);
+      // @ts-expect-error joined relation
+      legend.push({ repId: t.rep_id, name: t.av_users?.name ?? "Rep", color });
+    }
+    const seenCustomer = new Set<string>();
+    const teamCustomers: TeamMapCustomer[] = [];
+    for (const t of tours ?? []) {
+      const color = repColor.get(t.rep_id) ?? TEAM_MAP_PALETTE[0];
+      for (const s of stopsByTour.get(t.id) ?? []) {
+        if (!s.customer_id || s.latitude == null || s.longitude == null) continue;
+        if (seenCustomer.has(s.customer_id)) continue;
+        seenCustomer.add(s.customer_id);
+        teamCustomers.push({
+          id: s.customer_id,
+          name: s.customerName ?? "Customer",
+          latitude: s.latitude,
+          longitude: s.longitude,
+          zone: null,
+          segment: null,
+          color,
+        });
+      }
+    }
+    teamMap = { customers: teamCustomers, legend };
   }
 
   return (
     <div>
       <PageHeader title="Tour Plan" subtitle="Weekly territory plans" />
+
+      {teamMap && teamMap.customers.length > 0 && (
+        <Card className="mb-6">
+          <div className="font-medium text-[var(--ink)] mb-2">Team tour map</div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+            {teamMap.legend.map((r) => (
+              <div key={r.repId} className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
+                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: r.color }} />
+                {r.name}
+              </div>
+            ))}
+          </div>
+          <MapView customers={teamMap.customers} height="360px" />
+        </Card>
+      )}
 
       <Card className="mb-6">
         <div className="font-medium text-[var(--ink)] mb-3">Plan a tour</div>
@@ -176,6 +243,15 @@ export default async function ToursPage() {
                   customers={tourCustomers}
                   weekStart={t.week_start}
                   endDate={t.end_date}
+                  lastVisitByCustomer={lastVisitByCustomer}
+                />
+                <ShareTourButton
+                  weekStart={t.week_start}
+                  endDate={t.end_date}
+                  zone={t.zone ? (ZONE_LABEL[t.zone as Zone] ?? t.zone) : null}
+                  states={tourStates}
+                  planNotes={t.plan_notes}
+                  stops={stopsByTour.get(t.id) ?? []}
                 />
                 {t.zone && (
                   <div className="mt-3 pt-3 border-t border-[var(--border)]">

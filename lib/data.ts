@@ -26,6 +26,30 @@ export async function getStatesByZone(): Promise<Record<Zone, string[]>> {
   return byZone;
 }
 
+/** Most recent visit_date per customer, for the given customer ids — used
+ * to flag overdue customers when picking a tour stop (never-visited or
+ * longest-since-visited first). Returns a plain object keyed by customer id
+ * so it's easy to pass straight through to a client component as a prop. */
+export async function getLastVisitByCustomer(
+  customerIds: string[],
+): Promise<Record<string, string | null>> {
+  if (customerIds.length === 0) return {};
+  const { data } = await supabaseAdmin
+    .from("av_visits")
+    .select("customer_id, visit_date")
+    .in("customer_id", customerIds)
+    .order("visit_date", { ascending: false });
+
+  const latest: Record<string, string | null> = {};
+  for (const row of data ?? []) {
+    if (!(row.customer_id in latest)) latest[row.customer_id] = row.visit_date;
+  }
+  for (const id of customerIds) {
+    if (!(id in latest)) latest[id] = null;
+  }
+  return latest;
+}
+
 export async function getDashboardStats(session: Session, range?: DateRange) {
   const repId = getRepScope(session);
 

@@ -16,6 +16,8 @@ import {
   LogOut,
   Plus,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Check,
   Clock,
   Truck,
@@ -29,6 +31,7 @@ import {
   UserCog,
   Flower2,
   Compass,
+  Share2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -50,6 +53,8 @@ const MAP: Record<string, LucideIcon> = {
   "log-out": LogOut,
   plus: Plus,
   "chevron-right": ChevronRight,
+  "chevron-up": ChevronUp,
+  "chevron-down": ChevronDown,
   check: Check,
   clock: Clock,
   truck: Truck,
@@ -63,6 +68,7 @@ const MAP: Record<string, LucideIcon> = {
   "user-cog": UserCog,
   flower: Flower2,
   compass: Compass,
+  share: Share2,
 };
 
 export function Icon({

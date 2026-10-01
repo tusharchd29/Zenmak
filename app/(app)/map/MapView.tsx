@@ -15,6 +15,9 @@ type MapCustomer = {
   longitude: number;
   zone: string | null;
   segment: string | null;
+  /** Overrides the usual zone-based pin color — used by the owner's
+   * team-wide tour map to color pins by rep instead. */
+  color?: string;
 };
 
 export type StateHighlight = {
@@ -179,7 +182,7 @@ export function MapView({
           <Marker
             key={c.id}
             position={[c.latitude, c.longitude]}
-            icon={pinIcon(ZONE_COLOR[c.zone ?? ""] ?? "#028090")}
+            icon={pinIcon(c.color ?? ZONE_COLOR[c.zone ?? ""] ?? "#028090")}
             // In the non-interactive dashboard preview the whole card is a
             // single <Link href="/map">; a clickable marker underneath it
             // would fight that link for the tap (opening a popup instead of,

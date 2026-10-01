@@ -115,3 +115,36 @@ export function ageingLabel(order: {
   if (days === 0) return `${STATUS_LABEL[order.status]} today`;
   return `${days}d in ${STATUS_LABEL[order.status]}`;
 }
+
+/** Straight-line (haversine) distance in km between two lat/long points —
+ * not a driving distance, but enough to flag "these two stops are far
+ * apart" without calling a routing API. */
+export function distanceKm(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+): number {
+  const R = 6371;
+  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
+  const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;
+  const lat1 = (a.latitude * Math.PI) / 180;
+  const lat2 = (b.latitude * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+  return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+/** Every calendar date from `start` to `end` inclusive, as "YYYY-MM-DD"
+ * strings — used to lay out a tour's day-by-day agenda, including days
+ * with no stops. Capped at 31 days so a badly-entered range (or one left
+ * open-ended far in the future) can't generate thousands of rows. */
+export function dateRange(start: string, end: string): string[] {
+  const dates: string[] = [];
+  const cur = new Date(start + "T00:00:00Z");
+  const last = new Date(end + "T00:00:00Z");
+  if (Number.isNaN(cur.getTime()) || Number.isNaN(last.getTime()) || cur > last) return [start];
+  for (let i = 0; i < 31 && cur <= last; i++) {
+    dates.push(cur.toISOString().slice(0, 10));
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return dates;
+}

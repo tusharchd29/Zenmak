@@ -218,6 +218,7 @@ create table if not exists av_tour_stops (
   notes text,
   completed boolean not null default false,
   completed_at timestamptz,
+  sort_order integer not null default 0, -- manual order within a day, via move up/down
   created_at timestamptz not null default now()
 );
 

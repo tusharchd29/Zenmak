@@ -62,10 +62,61 @@ export async function createTourStop(formData: FormData) {
     return { ok: false, message: "Tour plan not found" };
   }
 
+  // New stop goes to the end of that day's list.
+  const { data: existing } = await supabaseAdmin
+    .from("av_tour_stops")
+    .select("sort_order")
+    .eq("tour_id", tour_id)
+    .eq("planned_date", planned_date)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
+
   const { error } = await supabaseAdmin
     .from("av_tour_stops")
-    .insert({ tour_id, customer_id, planned_date, notes });
+    .insert({ tour_id, customer_id, planned_date, notes, sort_order: nextOrder });
   if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/tours");
+  return { ok: true };
+}
+
+/** Swaps a stop's sort_order with its neighbor on the same day, moving it
+ * up or down within that day's list. No-ops quietly if already at an end. */
+export async function reorderTourStop(
+  stopId: string,
+  tourId: string,
+  direction: "up" | "down",
+) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Not found" };
+
+  const { data: stop } = await supabaseAdmin
+    .from("av_tour_stops")
+    .select("id, planned_date, sort_order")
+    .eq("id", stopId)
+    .maybeSingle();
+  if (!stop) return { ok: false, message: "Stop not found" };
+
+  const { data: dayStops } = await supabaseAdmin
+    .from("av_tour_stops")
+    .select("id, sort_order")
+    .eq("tour_id", tourId)
+    .eq("planned_date", stop.planned_date)
+    .order("sort_order", { ascending: true });
+  const list = dayStops ?? [];
+  const idx = list.findIndex((s) => s.id === stopId);
+  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (idx === -1 || swapIdx < 0 || swapIdx >= list.length) return { ok: true }; // already at the end
+
+  const a = list[idx];
+  const b = list[swapIdx];
+  const [{ error: e1 }, { error: e2 }] = await Promise.all([
+    supabaseAdmin.from("av_tour_stops").update({ sort_order: b.sort_order }).eq("id", a.id),
+    supabaseAdmin.from("av_tour_stops").update({ sort_order: a.sort_order }).eq("id", b.id),
+  ]);
+  if (e1 || e2) return { ok: false, message: (e1 || e2)?.message };
 
   revalidatePath("/tours");
   return { ok: true };
