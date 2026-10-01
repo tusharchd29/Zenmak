@@ -22,7 +22,7 @@ export default async function ToursPage() {
 
   const toursQuery = supabaseAdmin
     .from("av_tours")
-    .select("id, week_start, zone, plan_notes, rep_id, av_users(name)")
+    .select("id, week_start, end_date, zone, plan_notes, rep_id, av_users(name)")
     .order("week_start", { ascending: false })
     .limit(20);
   if (repId) toursQuery.eq("rep_id", repId);
@@ -60,26 +60,28 @@ export default async function ToursPage() {
       <PageHeader title="Tour Plan" subtitle="Weekly territory plans" />
 
       <Card className="mb-6">
-        <div className="font-medium text-[var(--ink)] mb-3">Plan a week</div>
+        <div className="font-medium text-[var(--ink)] mb-3">Plan a tour</div>
         <ActionForm action={createTourPlan} resetOnSuccess className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Week starting
-              </label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">From</label>
               <input type="date" name="week_start" required className="input-field" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">Zone</label>
-              <select name="zone" className="input-field" defaultValue="">
-                <option value="">Not set</option>
-                {ZONES.map((z) => (
-                  <option key={z} value={z}>
-                    {ZONE_LABEL[z]}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">To</label>
+              <input type="date" name="end_date" className="input-field" />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[var(--ink)] mb-1">Zone</label>
+            <select name="zone" className="input-field" defaultValue="">
+              <option value="">Not set</option>
+              {ZONES.map((z) => (
+                <option key={z} value={z}>
+                  {ZONE_LABEL[z]}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
@@ -119,11 +121,13 @@ export default async function ToursPage() {
                 revalidate={["/tours"]}
                 initialValues={{
                   week_start: t.week_start,
+                  end_date: t.end_date,
                   zone: t.zone,
                   plan_notes: t.plan_notes,
                 }}
                 fields={[
-                  { name: "week_start", label: "Week starting", type: "date" },
+                  { name: "week_start", label: "From", type: "date" },
+                  { name: "end_date", label: "To", type: "date" },
                   {
                     name: "zone",
                     label: "Zone",
@@ -137,7 +141,8 @@ export default async function ToursPage() {
                 ]}
               >
                 <div className="text-sm font-medium text-[var(--ink)]">
-                  Week of {formatDate(t.week_start)}
+                  {formatDate(t.week_start)}
+                  {t.end_date && t.end_date !== t.week_start && ` – ${formatDate(t.end_date)}`}
                   {t.zone && (
                     <span className="text-[var(--muted)]"> · {ZONE_LABEL[t.zone as Zone] ?? t.zone}</span>
                   )}
@@ -152,6 +157,7 @@ export default async function ToursPage() {
                   stops={stopsByTour.get(t.id) ?? []}
                   customers={tourCustomers}
                   weekStart={t.week_start}
+                  endDate={t.end_date}
                 />
               </EditableCard>
             );

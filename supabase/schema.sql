@@ -30,6 +30,17 @@ create table if not exists av_segments (
   name text primary key
 );
 
+-- Reference/config table only — maps each Indian state (and union
+-- territory) to one of the 4 existing zones (north/central/west/south),
+-- shown and editable on the owner-only /zones page. Not wired into
+-- av_customers.zone, which stays a direct, independent selection.
+create table if not exists av_zone_states (
+  id uuid primary key default gen_random_uuid(),
+  state text not null unique,
+  zone text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists av_customers (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -185,7 +196,8 @@ create table if not exists av_rep_advances (
 create table if not exists av_tours (
   id uuid primary key default gen_random_uuid(),
   rep_id uuid not null references av_users(id),
-  week_start date not null,
+  week_start date not null, -- "from" date of the tour's date range
+  end_date date, -- "to" date of the tour's date range; nullable for older single-date plans
   zone text,
   plan_notes text,
   created_at timestamptz not null default now()

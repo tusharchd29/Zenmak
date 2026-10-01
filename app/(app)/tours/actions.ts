@@ -10,14 +10,19 @@ export async function createTourPlan(formData: FormData) {
   if (!session) redirect("/login");
 
   const week_start = String(formData.get("week_start") || "");
+  const end_date = String(formData.get("end_date") || "") || null;
   const zone = String(formData.get("zone") || "").trim() || null;
   const plan_notes = String(formData.get("plan_notes") || "").trim() || null;
 
-  if (!week_start) return { ok: false, message: "Week is required" };
+  if (!week_start) return { ok: false, message: "From date is required" };
+  if (end_date && end_date < week_start) {
+    return { ok: false, message: "To date must be on or after the from date" };
+  }
 
   const { error } = await supabaseAdmin.from("av_tours").insert({
     rep_id: session.userId,
     week_start,
+    end_date,
     zone,
     plan_notes,
   });

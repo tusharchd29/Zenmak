@@ -23,11 +23,13 @@ export function TourStops({
   stops,
   customers,
   weekStart,
+  endDate,
 }: {
   tourId: string;
   stops: Stop[];
   customers: Customer[];
   weekStart: string;
+  endDate: string | null;
 }) {
   const [adding, setAdding] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -125,6 +127,8 @@ export function TourStops({
               name="planned_date"
               required
               defaultValue={weekStart}
+              min={weekStart}
+              max={endDate ?? undefined}
               className="input-field text-xs py-1.5"
             />
             <input name="notes" placeholder="Notes (optional)" className="input-field text-xs py-1.5" />
