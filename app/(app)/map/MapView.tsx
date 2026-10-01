@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMap } from "react-leaflet";
+import type { FeatureCollection } from "geojson";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
@@ -14,6 +15,15 @@ type MapCustomer = {
   longitude: number;
   zone: string | null;
   segment: string | null;
+};
+
+export type StateHighlight = {
+  zone: Zone;
+  /** Every state in this zone — gets a faint fill for context. */
+  allStates: string[];
+  /** The subset this particular trip covers — gets a stronger fill. An
+   * empty array is treated as "all of them" (no narrowing chosen yet). */
+  selectedStates: string[];
 };
 
 const ZONE_COLOR: Record<string, string> = {
@@ -36,21 +46,91 @@ function pinIcon(color: string) {
   });
 }
 
+/** Loads the (static, pre-simplified) India state-boundary file once it's
+ * needed, rather than bundling ~650KB of GeoJSON into every page that
+ * renders a map. */
+function useIndiaStatesGeoJson(enabled: boolean) {
+  const [data, setData] = useState<FeatureCollection | null>(null);
+  useEffect(() => {
+    if (!enabled || data) return;
+    let cancelled = false;
+    fetch("/india-states.geojson")
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled) setData(json);
+      })
+      .catch(() => {
+        // Non-critical — the map still works without the shading layer.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, data]);
+  return data;
+}
+
+/** Pans/zooms to fit the highlighted states (or the customer pins, if
+ * there's no highlight) once, on first render — not on every re-render,
+ * so the rep can still freely pan/zoom the map afterward. */
+function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
+  const map = useMap();
+  const fitted = useRef(false);
+  useEffect(() => {
+    if (bounds && !fitted.current) {
+      map.fitBounds(bounds, { padding: [24, 24] });
+      fitted.current = true;
+    }
+  }, [bounds, map]);
+  return null;
+}
+
 export function MapView({
   customers,
   height = "70vh",
   interactive = true,
+  highlightStates,
 }: {
   customers: MapCustomer[];
   height?: string;
   interactive?: boolean;
+  /** Shades the given zone's states on top of the regular tile map —
+   * used on a tour plan to show which states it covers, in addition to
+   * the usual customer pins. */
+  highlightStates?: StateHighlight;
 }) {
+  const geoJson = useIndiaStatesGeoJson(!!highlightStates);
+
   const center = useMemo<[number, number]>(() => {
     if (customers.length === 0) return [22.9734, 78.6569]; // center of India
     const lat = customers.reduce((s, c) => s + c.latitude, 0) / customers.length;
     const lng = customers.reduce((s, c) => s + c.longitude, 0) / customers.length;
     return [lat, lng];
   }, [customers]);
+
+  const highlightedFeatures = useMemo(() => {
+    if (!geoJson || !highlightStates) return null;
+    const names = new Set(
+      highlightStates.selectedStates.length > 0 ? highlightStates.selectedStates : highlightStates.allStates,
+    );
+    return {
+      type: "FeatureCollection",
+      features: geoJson.features.filter((f) => names.has((f.properties as { state?: string })?.state ?? "")),
+    } as FeatureCollection;
+  }, [geoJson, highlightStates]);
+
+  const fitBoundsTarget = useMemo<L.LatLngBoundsExpression | null>(() => {
+    if (customers.length > 0) {
+      return customers.map((c) => [c.latitude, c.longitude] as [number, number]);
+    }
+    if (highlightedFeatures && highlightedFeatures.features.length > 0) {
+      try {
+        return L.geoJSON(highlightedFeatures).getBounds();
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, [customers, highlightedFeatures]);
 
   return (
     <div className="rounded-2xl overflow-hidden border border-[var(--border)]" style={{ height }}>
@@ -68,6 +148,27 @@ export function MapView({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        {geoJson && highlightStates && (
+          <GeoJSON
+            key={highlightStates.selectedStates.join(",") || highlightStates.zone}
+            data={geoJson}
+            style={(feature) => {
+              const name = (feature?.properties as { state?: string })?.state ?? "";
+              const color = ZONE_COLOR[highlightStates.zone] ?? "#028090";
+              const isSelected =
+                highlightStates.selectedStates.length === 0 || highlightStates.selectedStates.includes(name);
+              const inZone = highlightStates.allStates.includes(name);
+              if (inZone && isSelected) {
+                return { color, weight: 2, fillColor: color, fillOpacity: 0.35 };
+              }
+              if (inZone) {
+                return { color, weight: 1, fillColor: color, fillOpacity: 0.08, dashArray: "4" };
+              }
+              return { color: "#cbd5e1", weight: 0.5, fillOpacity: 0 };
+            }}
+          />
+        )}
+        {fitBoundsTarget && <FitBounds bounds={fitBoundsTarget} />}
         {customers.map((c) => (
           <Marker
             key={c.id}
@@ -95,6 +196,11 @@ export function MapView({
           </Marker>
         ))}
       </MapContainer>
+      {highlightStates && (
+        <p className="text-[10px] text-[var(--muted)] px-2 py-1 bg-[var(--offwhite)]">
+          State boundaries: DataMeet India community (CC BY 4.0), simplified
+        </p>
+      )}
     </div>
   );
 }

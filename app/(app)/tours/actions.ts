@@ -12,6 +12,7 @@ export async function createTourPlan(formData: FormData) {
   const week_start = String(formData.get("week_start") || "");
   const end_date = String(formData.get("end_date") || "") || null;
   const zone = String(formData.get("zone") || "").trim() || null;
+  const states = formData.getAll("states").map(String).filter(Boolean);
   const plan_notes = String(formData.get("plan_notes") || "").trim() || null;
 
   if (!week_start) return { ok: false, message: "From date is required" };
@@ -24,6 +25,7 @@ export async function createTourPlan(formData: FormData) {
     week_start,
     end_date,
     zone,
+    states,
     plan_notes,
   });
 
@@ -78,6 +80,18 @@ export async function toggleTourStop(stopId: string, tourId: string, completed: 
     .from("av_tour_stops")
     .update({ completed, completed_at: completed ? new Date().toISOString() : null })
     .eq("id", stopId);
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/tours");
+  return { ok: true };
+}
+
+export async function updateTourStates(tourId: string, states: string[]) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Tour plan not found" };
+
+  const { error } = await supabaseAdmin.from("av_tours").update({ states }).eq("id", tourId);
   if (error) return { ok: false, message: error.message };
 
   revalidatePath("/tours");

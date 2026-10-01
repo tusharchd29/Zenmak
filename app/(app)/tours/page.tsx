@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getRepScope } from "@/lib/data";
+import { getRepScope, getStatesByZone } from "@/lib/data";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
@@ -11,6 +11,9 @@ import { createTourPlan } from "./actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
 import { TourStops, type Stop } from "./TourStops";
+import { TourPlanZoneFields } from "./TourPlanZoneFields";
+import { TourStatesEditor } from "./TourStatesEditor";
+import { MapView } from "../map/MapView";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +25,22 @@ export default async function ToursPage() {
 
   const toursQuery = supabaseAdmin
     .from("av_tours")
-    .select("id, week_start, end_date, zone, plan_notes, rep_id, av_users(name)")
+    .select("id, week_start, end_date, zone, states, plan_notes, rep_id, av_users(name)")
     .order("week_start", { ascending: false })
     .limit(20);
   if (repId) toursQuery.eq("rep_id", repId);
 
-  const customersQuery = supabaseAdmin.from("av_customers").select("id, name, rep_id").order("name");
+  const customersQuery = supabaseAdmin
+    .from("av_customers")
+    .select("id, name, rep_id, zone, state, segment, latitude, longitude")
+    .order("name");
   if (repId) customersQuery.eq("rep_id", repId);
 
-  const [{ data: tours }, { data: allCustomers }] = await Promise.all([toursQuery, customersQuery]);
+  const [{ data: tours }, { data: allCustomers }, statesByZone] = await Promise.all([
+    toursQuery,
+    customersQuery,
+    getStatesByZone(),
+  ]);
 
   const tourIds = (tours ?? []).map((t) => t.id);
   const { data: allStops } = tourIds.length
@@ -72,17 +82,7 @@ export default async function ToursPage() {
               <input type="date" name="end_date" className="input-field" />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">Zone</label>
-            <select name="zone" className="input-field" defaultValue="">
-              <option value="">Not set</option>
-              {ZONES.map((z) => (
-                <option key={z} value={z}>
-                  {ZONE_LABEL[z]}
-                </option>
-              ))}
-            </select>
-          </div>
+          <TourPlanZoneFields statesByZone={statesByZone} />
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
               Overview notes
@@ -110,9 +110,21 @@ export default async function ToursPage() {
           {tours.map((t) => {
             // A rep only picks stops from their own customers; the owner
             // picks from whichever rep owns this tour.
-            const tourCustomers = repId
+            const repScopedCustomers = repId
               ? (allCustomers ?? []).filter((c) => c.rep_id === repId)
               : (allCustomers ?? []).filter((c) => c.rep_id === t.rep_id);
+            // Narrow further to the states this trip actually covers, once
+            // some are picked — an empty selection means "the whole zone",
+            // so it doesn't filter anything out.
+            const tourStates = t.states ?? [];
+            const tourCustomers =
+              tourStates.length > 0
+                ? repScopedCustomers.filter((c) => c.state && tourStates.includes(c.state))
+                : repScopedCustomers;
+            const mapCustomers = tourCustomers.filter(
+              (c): c is typeof c & { latitude: number; longitude: number } =>
+                c.latitude != null && c.longitude != null,
+            );
             return (
               <EditableCard
                 key={t.id}
@@ -152,6 +164,12 @@ export default async function ToursPage() {
                   )}
                 </div>
                 {t.plan_notes && <div className="text-sm text-[var(--ink)] mt-1">{t.plan_notes}</div>}
+                <TourStatesEditor
+                  tourId={t.id}
+                  zone={t.zone}
+                  states={tourStates}
+                  statesByZone={statesByZone}
+                />
                 <TourStops
                   tourId={t.id}
                   stops={stopsByTour.get(t.id) ?? []}
@@ -159,6 +177,29 @@ export default async function ToursPage() {
                   weekStart={t.week_start}
                   endDate={t.end_date}
                 />
+                {t.zone && (
+                  <div className="mt-3 pt-3 border-t border-[var(--border)]" onClick={(e) => e.stopPropagation()}>
+                    <div className="text-xs text-[var(--muted)] mb-1.5">
+                      {mapCustomers.length} of your customers {tourStates.length > 0 ? "in these states" : "in this zone"}
+                    </div>
+                    <MapView
+                      customers={mapCustomers.map((c) => ({
+                        id: c.id,
+                        name: c.name,
+                        latitude: c.latitude,
+                        longitude: c.longitude,
+                        zone: c.zone,
+                        segment: c.segment,
+                      }))}
+                      height="320px"
+                      highlightStates={{
+                        zone: t.zone as Zone,
+                        allStates: statesByZone[t.zone as Zone] ?? [],
+                        selectedStates: tourStates,
+                      }}
+                    />
+                  </div>
+                )}
               </EditableCard>
             );
           })}
