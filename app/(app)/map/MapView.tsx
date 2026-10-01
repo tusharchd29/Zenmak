@@ -72,15 +72,18 @@ function useIndiaStatesGeoJson(enabled: boolean) {
 /** Pans/zooms to fit the highlighted states (or the customer pins, if
  * there's no highlight) once, on first render — not on every re-render,
  * so the rep can still freely pan/zoom the map afterward. */
-function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
+function FitBounds({ bounds, maxZoom }: { bounds: L.LatLngBoundsExpression | null; maxZoom?: number }) {
   const map = useMap();
   const fitted = useRef(false);
   useEffect(() => {
     if (bounds && !fitted.current) {
-      map.fitBounds(bounds, { padding: [24, 24] });
+      // Cap how far it zooms in — a single pin with no state outline would
+      // otherwise fit tight to just that one point, zoomed in to street
+      // level with no surrounding context.
+      map.fitBounds(bounds, { padding: [24, 24], maxZoom: maxZoom ?? 8 });
       fitted.current = true;
     }
-  }, [bounds, map]);
+  }, [bounds, map, maxZoom]);
   return null;
 }
 
@@ -118,18 +121,21 @@ export function MapView({
     } as FeatureCollection;
   }, [geoJson, highlightStates]);
 
-  const fitBoundsTarget = useMemo<L.LatLngBoundsExpression | null>(() => {
-    if (customers.length > 0) {
-      return customers.map((c) => [c.latitude, c.longitude] as [number, number]);
-    }
+  const fitBoundsTarget = useMemo<L.LatLngBounds | null>(() => {
+    // Combine the customer pins with the highlighted states' outline (when
+    // there is one) so the view always shows the state(s) in context —
+    // one or two pins alone would otherwise zoom in tight on a single
+    // street, with no sense of where that sits in the state/zone.
+    const bounds = L.latLngBounds([]);
+    for (const c of customers) bounds.extend([c.latitude, c.longitude]);
     if (highlightedFeatures && highlightedFeatures.features.length > 0) {
       try {
-        return L.geoJSON(highlightedFeatures).getBounds();
+        bounds.extend(L.geoJSON(highlightedFeatures).getBounds());
       } catch {
-        return null;
+        // ignore — pins alone are still a usable bounds
       }
     }
-    return null;
+    return bounds.isValid() ? bounds : null;
   }, [customers, highlightedFeatures]);
 
   return (
