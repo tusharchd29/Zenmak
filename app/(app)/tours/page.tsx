@@ -178,7 +178,7 @@ export default async function ToursPage() {
                   endDate={t.end_date}
                 />
                 {t.zone && (
-                  <div className="mt-3 pt-3 border-t border-[var(--border)]" onClick={(e) => e.stopPropagation()}>
+                  <div className="mt-3 pt-3 border-t border-[var(--border)]">
                     <div className="text-xs text-[var(--muted)] mb-1.5">
                       {mapCustomers.length} of your customers {tourStates.length > 0 ? "in these states" : "in this zone"}
                     </div>
