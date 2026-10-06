@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 
 export async function recordPayment(
   orderId: string,
@@ -17,6 +18,8 @@ export async function recordPayment(
   if (!amount || amount <= 0) {
     throw new Error("Enter a valid amount");
   }
+  await assertCanAccessRow(session, "av_orders", orderId);
+  await assertCanUseCustomer(session, customerId);
 
   const { error } = await supabaseAdmin.from("av_payments").insert({
     order_id: orderId,
@@ -36,6 +39,7 @@ export async function recordPayment(
 export async function updatePaymentDueDate(orderId: string, dueDate: string | null) {
   const session = await getSession();
   if (!session) redirect("/login");
+  await assertCanAccessRow(session, "av_orders", orderId);
 
   const { error } = await supabaseAdmin
     .from("av_orders")

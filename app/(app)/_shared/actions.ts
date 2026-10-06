@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 
 // Tables editable through the generic inline-edit widget. Anything not
 // listed here is refused, even if the caller somehow supplies its name.
@@ -63,6 +64,8 @@ export async function updateEntry(
     if (OWNER_ONLY_TABLES.has(table)) {
       throw new Error(NOT_ALLOWED_MESSAGE);
     }
+    // A rep can never reassign a record to someone else.
+    delete (data as Record<string, unknown>).rep_id;
   }
 
   let query = supabaseAdmin.from(table).update(data).eq("id", id);

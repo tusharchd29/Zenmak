@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { attachPhotoIfPresent } from "@/lib/photos";
 import { getRateForDate } from "@/lib/rates";
 
@@ -85,6 +86,7 @@ export async function updateTravelLog(
   if (!session) redirect("/login");
 
   if (data.end_km < data.start_km) throw new Error("End km must be greater than start km");
+  await assertCanAccessRow(session, "av_travel_logs", id);
 
   const { error } = await supabaseAdmin
     .from("av_travel_logs")

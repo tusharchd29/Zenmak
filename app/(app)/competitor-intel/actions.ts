@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 
 export async function createCompetitorIntel(formData: FormData) {
   const session = await getSession();
@@ -16,6 +17,11 @@ export async function createCompetitorIntel(formData: FormData) {
 
   if (!customer_id || !competitor_name) {
     return { ok: false, message: "Customer and competitor name are required" };
+  }
+  try {
+    await assertCanUseCustomer(session, customer_id);
+  } catch {
+    return { ok: false, message: "Record not found." };
   }
 
   const { error } = await supabaseAdmin.from("av_competitor_intel").insert({

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { attachPhotoIfPresent } from "@/lib/photos";
 
 export async function createVisit(formData: FormData) {
@@ -24,6 +25,11 @@ export async function createVisit(formData: FormData) {
   const longitude = lngRaw ? Number(lngRaw) : null;
 
   if (!customer_id) return { ok: false, message: "Customer is required" };
+  try {
+    await assertCanUseCustomer(session, customer_id);
+  } catch {
+    return { ok: false, message: "Record not found." };
+  }
 
   const { data: inserted, error } = await supabaseAdmin
     .from("av_visits")

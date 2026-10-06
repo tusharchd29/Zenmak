@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 
 export async function createTrial(formData: FormData) {
   const session = await getSession();
@@ -17,6 +18,11 @@ export async function createTrial(formData: FormData) {
 
   if (!customer_id || !product) {
     return { ok: false, message: "Customer and product are required" };
+  }
+  try {
+    await assertCanUseCustomer(session, customer_id);
+  } catch {
+    return { ok: false, message: "Record not found." };
   }
 
   const { error } = await supabaseAdmin.from("av_product_trials").insert({

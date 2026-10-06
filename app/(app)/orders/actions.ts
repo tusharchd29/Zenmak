@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import type { OrderStatus } from "@/lib/utils";
 
 /**
@@ -46,6 +47,11 @@ export async function createOrder(formData: FormData) {
   const payment_due_date = String(formData.get("payment_due_date") || "") || null;
 
   if (!customer_id) return { ok: false, message: "Customer is required" };
+  try {
+    await assertCanUseCustomer(session, customer_id);
+  } catch {
+    return { ok: false, message: "Record not found." };
+  }
 
   // Three parallel field arrays from the repeating OrderItemsField rows —
   // FormData.getAll preserves DOM order, so index i of each array is one
@@ -212,6 +218,8 @@ export async function advanceOrderStatus(orderId: string, currentStatus: OrderSt
   const session = await getSession();
   if (!session) redirect("/login");
 
+  await assertCanAccessRow(session, "av_orders", orderId);
+
   const next = NEXT_STATUS[currentStatus];
   if (!next) throw new Error("Order is already fulfilled");
 
@@ -250,6 +258,12 @@ const PREV_STATUS: Record<OrderStatus, OrderStatus | null> = {
 export async function revertOrderStatus(orderId: string, currentStatus: OrderStatus) {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  try {
+    await assertCanAccessRow(session, "av_orders", orderId);
+  } catch {
+    return { ok: false, message: "Record not found." };
+  }
 
   const prev = PREV_STATUS[currentStatus];
   if (!prev) return { ok: false, message: "Order is already at the earliest stage" };

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 
 export async function createAdvance(formData: FormData) {
   const session = await getSession();
@@ -14,6 +15,11 @@ export async function createAdvance(formData: FormData) {
 
   if (!customer_id || amount <= 0) {
     return { ok: false, message: "Customer and a positive amount are required" };
+  }
+  try {
+    await assertCanUseCustomer(session, customer_id);
+  } catch {
+    return { ok: false, message: "Record not found." };
   }
 
   const { error } = await supabaseAdmin.from("av_advances").insert({
@@ -32,6 +38,11 @@ export async function createAdvance(formData: FormData) {
 export async function settleAdvance(advanceId: string) {
   const session = await getSession();
   if (!session) redirect("/login");
+  try {
+    await assertCanAccessRow(session, "av_advances", advanceId);
+  } catch {
+    return { ok: false, message: "Record not found." };
+  }
 
   const { error } = await supabaseAdmin
     .from("av_advances")
