@@ -7,6 +7,7 @@ import { Icon } from "./icon";
 import { cn } from "@/lib/utils";
 import type { Session } from "@/lib/session";
 import { PeacockFeather } from "./PeacockFeather";
+import { ZenmakMark } from "@/components/ZenmakMark";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -37,9 +38,7 @@ export function Sidebar({ session }: { session: Session }) {
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 md:shrink-0 border-r border-[var(--border)] bg-white h-screen sticky top-0">
       <div className="px-5 py-5 flex items-center gap-3 border-b border-[var(--border)]">
-        <div className="w-9 h-9 rounded-xl bg-[var(--teal)] flex items-center justify-center text-white font-bold text-sm">
-          OV
-        </div>
+        <ZenmakMark size={36} />
         <div className="flex-1">
           <div className="font-semibold text-[var(--ink)] leading-tight">
             Zenmak

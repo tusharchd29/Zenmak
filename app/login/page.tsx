@@ -3,6 +3,7 @@
 import { Suspense, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { loginWithPin } from "./actions";
+import { ZenmakMark } from "@/components/ZenmakMark";
 
 function IdleNotice() {
   const params = useSearchParams();
@@ -44,10 +45,11 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-10 bg-[var(--offwhite)]">
       <div className="w-full max-w-xs">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--teal)] flex items-center justify-center text-white text-xl font-bold mb-4">
-            OV
-          </div>
-          <h1 className="text-xl font-semibold text-[var(--ink)]">Zenmak</h1>
+          <ZenmakMark size={72} className="mb-3" />
+          <h1 className="text-2xl font-semibold text-[#2e3350] tracking-tight">Zenmak</h1>
+          <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--muted)] mt-0.5">
+            Animal Health Division
+          </p>
           <p className="text-sm text-[var(--muted)] mt-1">
             Enter your 4-digit PIN
           </p>
