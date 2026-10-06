@@ -1,4 +1,4 @@
-# Olvet Field Ops
+# Zenmak Field Ops
 
 A mobile-first field sales app for a 5-person veterinary supply team (1 owner + 4 reps): customer visits, sales orders with a Pending → Confirmed → Dispatched → Fulfilled lifecycle, monthly targets (counted only from fulfilled orders), expenses, advances, tour plans, travel logs, product trials, competitor intel, and shareable brochures.
 

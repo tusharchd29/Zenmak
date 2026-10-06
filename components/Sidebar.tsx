@@ -42,7 +42,7 @@ export function Sidebar({ session }: { session: Session }) {
         </div>
         <div className="flex-1">
           <div className="font-semibold text-[var(--ink)] leading-tight">
-            Olvet
+            Zenmak
           </div>
           <div className="text-xs text-[var(--muted)] leading-tight">
             Field Ops

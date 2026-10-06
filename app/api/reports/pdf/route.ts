@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="olvet-report-${start}-to-${end}.pdf"`,
+      "Content-Disposition": `attachment; filename="zenmak-report-${start}-to-${end}.pdf"`,
       "Cache-Control": "no-store",
     },
   });

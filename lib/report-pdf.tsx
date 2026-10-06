@@ -110,14 +110,14 @@ export function ReportDocument({ data }: { data: ReportData }) {
   });
 
   return (
-    <Document title={`Olvet report ${data.start} to ${data.end}`}>
+    <Document title={`Zenmak report ${data.start} to ${data.end}`}>
       <Page size="A4" style={styles.page} wrap>
-        <Text style={styles.title}>Olvet Field Ops Report</Text>
+        <Text style={styles.title}>Zenmak Field Ops Report</Text>
         <Text style={styles.subtitle}>
           {formatDate(data.start)} – {formatDate(data.end)} · {data.scopeLabel}
         </Text>
         <Text style={styles.generated}>
-          Generated {generatedAt} · figures are pulled directly from the Olvet database for this
+          Generated {generatedAt} · figures are pulled directly from the Zenmak database for this
           period — no summary text is AI-generated. Customer names link to their captured GPS
           location on Google Maps where available.
         </Text>
@@ -448,7 +448,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
 
         <Text
           style={styles.footer}
-          render={({ pageNumber, totalPages }) => `Olvet · page ${pageNumber} of ${totalPages}`}
+          render={({ pageNumber, totalPages }) => `Zenmak · page ${pageNumber} of ${totalPages}`}
           fixed
         />
       </Page>

@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Olvet Field Ops",
-  description: "Field sales, orders and targets for the Olvet team",
+  title: "Zenmak Field Ops",
+  description: "Field sales, orders and targets for the Zenmak team",
 };
 
 export const viewport: Viewport = {
