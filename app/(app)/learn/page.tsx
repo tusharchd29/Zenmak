@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getLang, ui } from "@/lib/i18n";
+import { getT } from "@/lib/i18n";
 import { CATEGORIES, PRODUCTS, productsIn } from "@/lib/catalog";
 import { getProgress, getTeamProgress } from "@/lib/learning";
 import { PageHeader } from "@/components/PageHeader";
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function LearnPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  const lang = await getLang();
+  const { lang, t, tx, txl } = await getT();
   const isOwner = session.role === "owner";
 
   const [progress, team] = await Promise.all([getProgress(session.userId), isOwner ? getTeamProgress() : Promise.resolve(null)]);
@@ -24,7 +24,7 @@ export default async function LearnPage() {
 
   return (
     <div>
-      <PageHeader title={ui("learning", lang)} subtitle={ui("learningSub", lang)} action={<LangToggle lang={lang} />} />
+      <PageHeader title={t("Learning")} subtitle={t("Short lessons on every product, in English and Hindi")} action={<LangToggle lang={lang} />} />
 
       {isOwner && !progress.available && (
         <Card className="mb-4 border-amber-300 bg-amber-50">
@@ -42,10 +42,10 @@ export default async function LearnPage() {
         <div className="flex items-center justify-between mb-2">
           <div className="font-medium text-[var(--ink)] flex items-center gap-2">
             <Icon name="trophy" size={18} className="text-[var(--saffron)]" />
-            {ui("yourProgress", lang)}
+            {t("Your progress")}
           </div>
           <div className="text-sm text-[var(--muted)]">
-            {passedTotal} / {PRODUCTS.length} {ui("lessons", lang)}
+            {passedTotal} / {PRODUCTS.length} {t("lessons")}
           </div>
         </div>
         <ProgressBar pct={(passedTotal / PRODUCTS.length) * 100} />
@@ -57,8 +57,8 @@ export default async function LearnPage() {
             <Icon name="bar-chart-3" size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-[var(--ink)]">{isOwner ? ui("report", lang) : ui("myResults", lang)}</div>
-            <div className="text-sm text-[var(--muted)] leading-snug">{ui("reportSub", lang)}</div>
+            <div className="font-medium text-[var(--ink)]">{isOwner ? t("Learning report") : t("My test results")}</div>
+            <div className="text-sm text-[var(--muted)] leading-snug">{t("Who learned what, when, and marks for every attempt")}</div>
           </div>
           <Icon name="chevron-right" size={16} className="text-[var(--muted)] shrink-0" />
         </Card>
@@ -70,8 +70,8 @@ export default async function LearnPage() {
             <Icon name="book-open" size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-[var(--ink)]">{ui("glossary", lang)}</div>
-            <div className="text-sm text-[var(--muted)] leading-snug">{ui("glossarySub", lang)}</div>
+            <div className="font-medium text-[var(--ink)]">{t("Technical glossary")}</div>
+            <div className="text-sm text-[var(--muted)] leading-snug">{t("Every technical term with a simple meaning and a line you can use")}</div>
           </div>
           <Icon name="chevron-right" size={16} className="text-[var(--muted)] shrink-0" />
         </Card>
@@ -89,9 +89,9 @@ export default async function LearnPage() {
                     <Icon name={c.icon} size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-[var(--ink)] leading-tight">{c.name[lang]}</div>
+                    <div className="font-medium text-[var(--ink)] leading-tight">{tx(c.name)}</div>
                     <div className="text-xs text-[var(--muted)] mt-0.5">
-                      {done} / {lessons.length} {ui("completed", lang)}
+                      {done} / {lessons.length} {t("completed")}
                     </div>
                     <div className="mt-2">
                       <ProgressBar pct={(done / lessons.length) * 100} />
@@ -109,7 +109,7 @@ export default async function LearnPage() {
         <Card className="mt-6">
           <div className="font-medium text-[var(--ink)] mb-3 flex items-center gap-2">
             <Icon name="users" size={18} className="text-[var(--teal)]" />
-            {ui("teamProgress", lang)}
+            {t("Team progress")}
           </div>
           <div className="space-y-3">
             {team.members.map((m) => (

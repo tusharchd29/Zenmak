@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getLang, ui } from "@/lib/i18n";
+import { getT } from "@/lib/i18n";
 import { BROCHURES, CATEGORIES, PRODUCTS, productSheets } from "@/lib/catalog";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
@@ -20,8 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function BrochuresPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  const lang = await getLang();
-  const hi = lang === "hi";
+  const { lang, t, tx, txl } = await getT();
 
   const { data: brochures } = await supabaseAdmin
     .from("av_brochures")
@@ -30,7 +29,7 @@ export default async function BrochuresPage() {
 
   const groups: BundleGroup[] = CATEGORIES.map((c) => ({
     id: c.id,
-    name: c.name[lang],
+    name: tx(c.name),
     products: PRODUCTS.filter((p) => p.category === c.id).map((p) => ({
       slug: p.slug,
       name: p.name,
@@ -39,43 +38,41 @@ export default async function BrochuresPage() {
   }));
 
   const shareLabels = {
-    sharePdf: ui("sharePdf", lang),
-    whatsapp: ui("whatsapp", lang),
-    download: ui("download", lang),
-    productPage: ui("productPage", lang),
-    fullBrochures: ui("fullBrochures", lang),
+    sharePdf: t("Share PDF"),
+    whatsapp: t("WhatsApp link"),
+    download: t("Download"),
+    productPage: t("Product page link (opens without login)"),
+    fullBrochures: t("Also in these full brochures"),
   };
 
   return (
     <div>
       <PageHeader
-        title={hi ? "ब्रोशर" : "Brochures"}
-        subtitle={hi ? "पूरा ब्रोशर, एक प्रोडक्ट, या अपनी पसंद के प्रोडक्ट — WhatsApp पर भेजें" : "Send a whole brochure, one product, or your own pick of products"}
+        title={t("Brochures")}
+        subtitle={t("Send a whole brochure, one product, or your own pick of products")}
         action={<LangToggle lang={lang} />}
       />
 
       <Card className="mb-6">
         <div className="flex items-center gap-2 font-medium text-[var(--ink)] mb-1">
           <Icon name="layers" size={18} className="text-[var(--teal)]" />
-          {hi ? "अपना ब्रोशर बनाएं" : "Make a custom brochure"}
+          {t("Make a custom brochure")}
         </div>
         <p className="text-sm text-[var(--muted)] mb-3">
-          {hi
-            ? "ग्राहक को जो प्रोडक्ट चाहिए, सिर्फ वही चुनें — सब एक PDF में जुड़कर भेजे जाएंगे। एक प्रोडक्ट भेजना हो तो प्रोडक्ट मास्टर से भी भेज सकते हैं।"
-            : "Tick only the products this customer needs — they're joined into one PDF. To send a single product you can also use its page in the Product Master."}
+          {t("Tick only the products this customer needs — they're joined into one PDF. To send a single product you can also use its page in the Product Master.")}
         </p>
         <BundleBuilder
           groups={groups}
           labels={{
-            detailed: ui("detailedSheet", lang),
-            summary: ui("summarySheet", lang),
-            selected: hi ? "चुने" : "selected",
-            pages: ui("pages", lang),
-            clear: hi ? "हटाएं" : "Clear",
-            sharePdf: ui("sharePdf", lang),
-            download: ui("download", lang),
-            pickSome: hi ? "प्रोडक्ट चुनें" : "Pick some products",
-            selectAll: hi ? "सभी चुनें / हटाएं" : "Select all / none",
+            detailed: t("Detailed brochure"),
+            summary: t("One-page summary"),
+            selected: t("selected"),
+            pages: t("pages"),
+            clear: t("Clear"),
+            sharePdf: t("Share PDF"),
+            download: t("Download"),
+            pickSome: t("Pick some products"),
+            selectAll: t("Select all / none"),
           }}
         />
       </Card>
@@ -83,11 +80,11 @@ export default async function BrochuresPage() {
       <Card className="mb-6">
         <div className="flex items-center gap-2 font-medium text-[var(--ink)]">
           <Icon name="book-open" size={18} className="text-[var(--teal)]" />
-          {hi ? "पूरे ब्रोशर" : "Full brochures"}
+          {t("Full brochures")}
         </div>
         <ShareSheet
           items={BROCHURES.map((b) => ({
-            label: `${b.title[lang]} · ${b.pages} ${ui("pages", lang)} · ${b.sizeMb} MB`,
+            label: `${tx(b.title)} · ${b.pages} ${t("pages")} · ${b.sizeMb} MB`,
             file: b.file,
             filename: `Zenmak-${b.title.en.replace(/[^A-Za-z0-9]+/g, "-").replace(/-$/, "")}.pdf`,
           }))}
@@ -117,7 +114,7 @@ export default async function BrochuresPage() {
 
       {brochures && brochures.length > 0 && (
         <>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)] mb-2">{hi ? "दूसरे ब्रोशर" : "Other brochures"}</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)] mb-2">{t("Other brochures")}</h2>
           <div className="space-y-2">
             {brochures.map((b) =>
               session.role === "owner" ? (

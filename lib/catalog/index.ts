@@ -1,4 +1,4 @@
-import type { CategoryId, L, Lang, Pack, Product, QuizQuestion } from "./types";
+import type { CategoryId, L, Pack, Product, QuizQuestion } from "./types";
 import { CATEGORIES } from "./categories";
 import { BROCHURES } from "./brochures";
 import { FEED_ADDITIVES } from "./products/feed-additives";
@@ -6,6 +6,7 @@ import { NUTRITION } from "./products/nutrition";
 import { HERBAL_BIOSECURITY } from "./products/herbal-biosecurity";
 import { MEDICINES } from "./products/medicines";
 import SHEETS from "./sheets.json";
+import { msg } from "../i18n-shared";
 import { TECHNICAL } from "./technical";
 import { FOUNDATIONS } from "./foundations";
 import { GLOSSARY, type Term } from "./glossary";
@@ -33,10 +34,6 @@ export function getCategory(id: CategoryId) {
 
 export function productsIn(category: CategoryId): Product[] {
   return PRODUCTS.filter((p) => p.category === category);
-}
-
-export function t(text: L, lang: Lang): string {
-  return text[lang];
 }
 
 // --- Technical learning ------------------------------------------------------
@@ -71,6 +68,15 @@ export function termsFor(p: Product, limit = 8): Term[] {
     }),
   ).slice(0, limit);
 }
+
+/** How each product is given, in English — translate with t() when shown. */
+export const FORM_LABEL: Record<Product["form"], string> = {
+  feed: msg("Feed"),
+  water: msg("Water soluble"),
+  liquid: msg("Liquid (oral)"),
+  spray: msg("Farm use / spray"),
+  injection: msg("Injection"),
+};
 
 export function formatPack(pack: Pack): string {
   return `${pack.size} ${pack.unit}`;

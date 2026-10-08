@@ -4,7 +4,7 @@
 // English and Hindi; composition stays as printed on the brochure, since
 // ingredient names are the same in both.
 
-export type Lang = "en" | "hi";
+export type { Lang } from "@/lib/i18n-shared";
 
 /** One piece of text in both languages. */
 export type L = { en: string; hi: string };
