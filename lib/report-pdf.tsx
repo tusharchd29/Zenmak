@@ -106,6 +106,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
   const showRep = data.scopeLabel === "Whole team";
   const custWidth = showRep ? "26%" : "34%";
   const generatedAt = new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -121,7 +122,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
           {formatDate(data.start)} – {formatDate(data.end)} · {data.scopeLabel}
         </Text>
         <Text style={styles.generated}>
-          Generated {generatedAt} · figures are pulled directly from the Zenmak database for this
+          Generated {generatedAt} IST · figures are pulled directly from the Zenmak database for this
           period — no summary text is AI-generated. Customer names link to their captured GPS
           location on Google Maps where available.
         </Text>
