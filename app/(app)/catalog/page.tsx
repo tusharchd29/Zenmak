@@ -62,10 +62,9 @@ export default async function CatalogPage() {
 
       {session.role === "owner" && (
         <Card className="mt-6">
-          <div className="font-medium text-[var(--ink)] mb-1">Order product list</div>
+          <div className="font-medium text-[var(--ink)] mb-1">{t("Order product list")}</div>
           <p className="text-sm text-[var(--muted)] mb-3">
-            Adds every product above to the list reps pick from on new orders — one entry per pack size (e.g. &ldquo;Hygin-Tact 20 (5 L)&rdquo;).
-            Products already in the list are skipped, and nothing existing is changed.
+            {t("Adds every product above to the list reps pick from on new orders — one entry per pack size (e.g. “{example}”). Products already in the list are skipped, and nothing existing is changed.", { example: "Hygin-Tact 20 (5 L)" })}
           </p>
           <SyncButton />
         </Card>

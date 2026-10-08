@@ -96,18 +96,18 @@ export default async function BrochuresPage() {
 
       {session.role === "owner" && (
         <Card className="mb-6">
-          <div className="font-medium text-[var(--ink)] mb-3">Add another brochure</div>
+          <div className="font-medium text-[var(--ink)] mb-3">{t("Add another brochure")}</div>
           <ActionForm action={createBrochure} resetOnSuccess className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">Title</label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Title")}</label>
               <input name="title" required className="input-field" />
             </div>
             <BrochureFileField />
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">Or paste a link instead</label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Or paste a link instead")}</label>
               <input name="url" className="input-field" placeholder="https://..." />
             </div>
-            <SubmitButton>Save</SubmitButton>
+            <SubmitButton>{t("Save")}</SubmitButton>
           </ActionForm>
         </Card>
       )}
@@ -125,8 +125,8 @@ export default async function BrochuresPage() {
                   revalidate={["/brochures"]}
                   initialValues={{ title: b.title, url: b.url }}
                   fields={[
-                    { name: "title", label: "Title", type: "text" },
-                    { name: "url", label: "Link", type: "text" },
+                    { name: "title", label: t("Title"), type: "text" },
+                    { name: "url", label: t("Link"), type: "text" },
                   ]}
                   className="flex items-center justify-between"
                 >
@@ -138,7 +138,7 @@ export default async function BrochuresPage() {
                       rel="noopener noreferrer"
                       className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
                     >
-                      Share on WhatsApp
+                      {t("Share on WhatsApp")}
                     </a>
                   </div>
                 </EditableCard>
@@ -151,7 +151,7 @@ export default async function BrochuresPage() {
                     rel="noopener noreferrer"
                     className="btn-secondary text-xs px-3 py-1.5"
                   >
-                    Share on WhatsApp
+                    {t("Share on WhatsApp")}
                   </a>
                 </Card>
               ),
