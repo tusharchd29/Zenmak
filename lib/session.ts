@@ -13,14 +13,16 @@ export type Session = {
 const COOKIE_NAME = "allvet_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
-// NOTE: temporary stopgap fallback — see lib/supabase-admin.ts note. Set a
-// real SESSION_SECRET env var on Vercel and remove this hardcoded fallback
-// once done.
+// Signs the session cookie. Must be a long random value set as the
+// SESSION_SECRET env var (never committed — this repo's history contains an
+// old hardcoded value, which must not be reused). Fails loudly rather than
+// signing cookies with a guessable key.
 function getSecret(): string {
-  return (
-    process.env.SESSION_SECRET ||
-    "248e3f938aab671229bbb7d4b6402e39dd7e781694e4b629e7715ee4330d8bbe"
-  );
+  const secret = process.env.SESSION_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("SESSION_SECRET is not set (or is shorter than 32 characters). Set it in the Vercel project's environment variables.");
+  }
+  return secret;
 }
 
 function sign(payload: string): string {
