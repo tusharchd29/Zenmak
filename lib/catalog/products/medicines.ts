@@ -250,8 +250,8 @@ export const MEDICINES: Product[] = [
     category: "antibiotics",
     form: "feed",
     rx: true,
-    tagline: { en: "Tiamulin 80% — concentrated", hi: "टियामुलिन 80% — गाढ़ा रूप" },
-    composition: ["Tiamulin hydrogen fumarate 80%"],
+    tagline: { en: "Concentrated tiamulin feed premix", hi: "गाढ़ा टियामुलिन फीड प्रीमिक्स" },
+    composition: ["Tiamulin hydrogen fumarate 100 g"],
     benefits: {
       en: ["Improves and sustains egg production", "Improves feed conversion ratio (FCR)", "Reduces respiratory problems such as CRD and complicated CRD caused by Mycoplasma"],
       hi: ["अंडा उत्पादन बढ़ाता और बनाए रखता है", "बेहतर FCR", "माइकोप्लाज़्मा से होने वाले CRD और कॉम्प्लिकेटेड CRD जैसी सांस की समस्याएं कम"],

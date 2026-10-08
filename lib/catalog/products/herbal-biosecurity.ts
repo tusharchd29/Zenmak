@@ -30,15 +30,11 @@ export const HERBAL_BIOSECURITY: Product[] = [
     },
     dosage: {
       en: [
-        "Powder — breeders: 500 g – 1 kg / ton of feed; layers and broilers: 500 g / ton of feed",
-        "Liquid — breeders: 500 g – 1 kg / ton of feed; layers and broilers: 500 g / ton of feed",
-        "Liquid in water: 1 ml / litre",
+        "500 g / ton of feed (powder or liquid)",
         "As advised by the veterinarian / nutritionist",
       ],
       hi: [
-        "पाउडर — ब्रीडर: 500 ग्राम – 1 किलो / टन फीड; लेयर और ब्रॉयलर: 500 ग्राम / टन फीड",
-        "लिक्विड — ब्रीडर: 500 ग्राम – 1 किलो / टन फीड; लेयर और ब्रॉयलर: 500 ग्राम / टन फीड",
-        "लिक्विड पानी में: 1 ml / लीटर",
+        "500 ग्राम / टन फीड (पाउडर या लिक्विड)",
         "वेटेरिनेरियन / न्यूट्रिशनिस्ट की सलाह अनुसार",
       ],
     },
