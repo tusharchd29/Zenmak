@@ -18,10 +18,10 @@ export function MobileNav() {
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
-            <li key={item.href}>
+            <li key={item.href} className="min-w-0">
               <Link
                 href={item.href}
-                className={`flex flex-col items-center gap-1 py-2.5 text-[11px] ${
+                className={`flex flex-col items-center gap-1 py-2.5 px-0.5 text-[11px] leading-tight text-center [overflow-wrap:anywhere] ${
                   active ? "text-[var(--teal)]" : "text-[var(--muted)]"
                 }`}
               >
