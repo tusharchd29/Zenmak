@@ -39,6 +39,26 @@ const EDITABLE_TABLES = new Set([
 
 const NOT_ALLOWED_MESSAGE = "Record not found, or you don't have permission to change it.";
 
+// The only columns the inline-edit forms change, per table. Anything else in
+// `data` is refused: the payload comes from the browser, so without this a
+// rep could set e.g. an order's status/fulfilled_by (gaming targets) or a
+// travel log's distance_km/rate_per_km (inflating reimbursement) on their
+// own rows. Travel logs, tour stops and order status have their own
+// validated actions; tables listed with no columns are delete-only here.
+const EDITABLE_COLUMNS: Record<string, readonly string[]> = {
+  av_customers: ["name", "phone", "address", "segment", "zone", "state"],
+  av_visits: ["visit_date", "purpose", "discussion_summary", "follow_up_required", "next_visit_date"],
+  av_orders: ["product", "quantity", "amount", "notes", "payment_due_date"],
+  av_advances: ["amount"],
+  av_expenses: ["category", "amount", "note", "expense_date"],
+  av_tours: ["week_start", "end_date", "zone", "plan_notes"],
+  av_travel_logs: [],
+  av_product_trials: ["product", "trial_date", "outcome_notes"],
+  av_competitor_intel: ["competitor_name", "competitor_product", "notes"],
+  av_brochures: ["title", "url"],
+  av_products: ["name", "category", "default_unit", "pack_size", "default_price", "active"],
+};
+
 export async function updateEntry(
   table: string,
   id: string,
@@ -52,6 +72,11 @@ export async function updateEntry(
     throw new Error("This record type can't be edited.");
   }
   if (!id) throw new Error("Missing record id");
+
+  const allowed = new Set(EDITABLE_COLUMNS[table] ?? []);
+  const extra = Object.keys(data).filter((k) => !allowed.has(k));
+  if (extra.length > 0) throw new Error(`These fields can't be edited here: ${extra.join(", ")}`);
+  if (Object.keys(data).length === 0) throw new Error("Nothing to save.");
 
   // Same floor the dedicated create actions enforce (e.g. createExpense,
   // createAdvance) — the generic inline-edit widget shares these fields but

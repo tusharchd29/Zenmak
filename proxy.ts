@@ -14,11 +14,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (session && isLoginPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
+  // No "already logged in → /dashboard" redirect from /login here: the
+  // cookie can be validly signed yet no longer accepted (user deactivated —
+  // see getSession), and bouncing /login → /dashboard → /login would loop.
+  // "/" sends a genuinely logged-in user to the dashboard instead.
 
   return NextResponse.next();
 }

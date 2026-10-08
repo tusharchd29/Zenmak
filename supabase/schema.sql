@@ -332,6 +332,15 @@ create table if not exists av_learning_attempts (
 );
 create index if not exists idx_av_learning_attempts_user on av_learning_attempts(user_id, created_at desc);
 
+-- PIN login attempts for rate limiting (see lib/login-limit.ts).
+create table if not exists av_login_attempts (
+  id uuid primary key default gen_random_uuid(),
+  ip text not null,
+  success boolean not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_av_login_attempts_ip_time on av_login_attempts(ip, created_at desc);
+
 create index if not exists idx_av_customer_contacts_customer on av_customer_contacts(customer_id);
 create index if not exists idx_av_customers_rep on av_customers(rep_id);
 create index if not exists idx_av_visits_rep on av_visits(rep_id);

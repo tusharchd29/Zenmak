@@ -20,6 +20,10 @@ export async function recordPayment(
   }
   await assertCanAccessRow(session, "av_orders", orderId);
   await assertCanUseCustomer(session, customerId);
+  // The payment must be against this order's own customer — both ids come
+  // from the browser, and a mismatch would skew each customer's dues.
+  const { data: order } = await supabaseAdmin.from("av_orders").select("customer_id").eq("id", orderId).maybeSingle();
+  if (!order || order.customer_id !== customerId) throw new Error("Record not found.");
 
   const { error } = await supabaseAdmin.from("av_payments").insert({
     order_id: orderId,

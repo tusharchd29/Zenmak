@@ -5,7 +5,7 @@ import { getRepScope } from "@/lib/data";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { PageHeader } from "@/components/PageHeader";
 import { ZONES, ZONE_LABEL } from "@/lib/utils";
-import { MapView } from "./MapView";
+import { MapView } from "./MapViewLazy";
 
 export const dynamic = "force-dynamic";
 

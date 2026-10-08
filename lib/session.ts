@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 import crypto from "crypto";
 
 export type Role = "owner" | "rep";
@@ -62,9 +63,30 @@ export async function createSession(session: Session) {
   });
 }
 
+/**
+ * The signed cookie alone isn't enough: a rep deactivated on the Team page,
+ * or whose role changed, would otherwise keep their old access for up to 30
+ * days. So the cookie is re-checked against av_users — once per request,
+ * thanks to React's cache() — and the role comes from the database, not the
+ * cookie. A transient DB error falls back to the cookie rather than logging
+ * the whole team out.
+ */
+const loadActiveUser = cache(async (userId: string) => {
+  // Imported lazily so proxy.ts (which only needs decodeSession) doesn't
+  // pull the database client into its bundle.
+  const { supabaseAdmin } = await import("@/lib/supabase-admin");
+  return supabaseAdmin.from("av_users").select("id, name, role, active").eq("id", userId).maybeSingle();
+});
+
 export async function getSession(): Promise<Session | null> {
   const store = await cookies();
-  return decodeSession(store.get(COOKIE_NAME)?.value);
+  const session = decodeSession(store.get(COOKIE_NAME)?.value);
+  if (!session) return null;
+
+  const { data: user, error } = await loadActiveUser(session.userId);
+  if (error) return session;
+  if (!user || !user.active) return null;
+  return { userId: user.id, name: user.name, role: user.role === "owner" ? "owner" : "rep" };
 }
 
 export async function clearSession() {
