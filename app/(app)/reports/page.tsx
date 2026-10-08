@@ -7,6 +7,7 @@ import { Icon } from "@/components/icon";
 import { REPORT_SECTIONS, REPORT_SECTION_LABEL } from "@/lib/reports";
 import { SHEETS } from "@/lib/report-csv";
 import { monthStartIST, todayIST } from "@/lib/date-range";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function ReportsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
   const isOwner = session.role === "owner";
 
   const today = todayIST();
@@ -26,8 +28,8 @@ export default async function ReportsPage() {
   return (
     <div>
       <PageHeader
-        title="Reports"
-        subtitle={isOwner ? "Whole-team activity, straight from the data" : "Your activity, straight from the data"}
+        title={t("Reports")}
+        subtitle={isOwner ? t("Whole-team activity, straight from the data") : t("Your activity, straight from the data")}
       />
       <Card>
         <div className="flex items-start gap-3 mb-5">
@@ -35,12 +37,16 @@ export default async function ReportsPage() {
             <Icon name="bar-chart-3" size={18} />
           </div>
           <div>
-            <div className="font-medium text-[var(--ink)]">Field ops report (PDF)</div>
+            <div className="font-medium text-[var(--ink)]">{t("Field ops report (PDF)")}</div>
             <p className="text-sm text-[var(--muted)] mt-0.5">
-              Pick a date range{isOwner ? ", who it should cover, and which sections to include" : ""} and
-              download a PDF. Every figure comes directly from your data — nothing here is
-              AI-written. Customer names link straight to their pinned location on Google Maps
-              wherever a location has been captured.
+              {isOwner
+                ? t("Pick a date range, who it should cover, and which sections to include and download a PDF.")
+                : t("Pick a date range and download a PDF.")}{" "}
+              {t("Every figure comes directly from your data — nothing here is AI-written.")}{" "}
+              {t("Customer names link straight to their pinned location on Google Maps wherever a location has been captured.")}
+            </p>
+            <p className="text-xs text-[var(--muted)] mt-1">
+              {t("Downloaded reports are in English.")}
             </p>
           </div>
         </div>
@@ -50,7 +56,7 @@ export default async function ReportsPage() {
         <form action="/api/reports/pdf" method="GET" target="_blank" className="space-y-4">
           <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">From</label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("From")}</label>
               <input
                 type="date"
                 name="start"
@@ -61,7 +67,7 @@ export default async function ReportsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">To</label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("To")}</label>
               <input
                 type="date"
                 name="end"
@@ -76,7 +82,7 @@ export default async function ReportsPage() {
           {isOwner && reps && reps.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1.5">
-                Who (leave all unchecked for the whole team)
+                {t("Who (leave all unchecked for the whole team)")}
               </label>
               <div className="flex flex-wrap gap-x-4 gap-y-2">
                 {reps.map((r) => (
@@ -91,13 +97,13 @@ export default async function ReportsPage() {
 
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1.5">
-              Which reports to include
+              {t("Which reports to include")}
             </label>
             <div className="flex flex-wrap gap-x-4 gap-y-2">
               {REPORT_SECTIONS.map((s) => (
                 <label key={s} className="inline-flex items-center gap-1.5 text-sm text-[var(--ink)]">
                   <input type="checkbox" name="section" value={s} defaultChecked className="rounded" />
-                  {REPORT_SECTION_LABEL[s]}
+                  {t(REPORT_SECTION_LABEL[s])}
                 </label>
               ))}
             </div>
@@ -108,18 +114,20 @@ export default async function ReportsPage() {
             className="btn-primary w-full py-2.5 inline-flex items-center justify-center gap-2"
           >
             <Icon name="bar-chart-3" size={16} />
-            Download PDF report
+            {t("Download PDF report")}
           </button>
 
           <div className="border-t border-[var(--border)] pt-4">
             <label className="block text-sm font-medium text-[var(--ink)] mb-1.5">
-              Or download one sheet for Excel / Google Sheets (same dates{isOwner ? " and people" : ""})
+              {isOwner
+                ? t("Or download one sheet for Excel / Google Sheets (same dates and people)")
+                : t("Or download one sheet for Excel / Google Sheets (same dates)")}
             </label>
             <div className="flex gap-2">
               <select name="sheet" defaultValue="orders" className="input-field flex-1">
                 {Object.entries(SHEETS).map(([key, sheet]) => (
                   <option key={key} value={key}>
-                    {sheet.label}
+                    {t(sheet.label)}
                   </option>
                 ))}
               </select>

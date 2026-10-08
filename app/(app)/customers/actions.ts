@@ -5,10 +5,12 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { parseCoord } from "@/lib/validate";
+import { getT } from "@/lib/i18n";
 
 export async function createCustomer(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const name = String(formData.get("name") || "").trim();
   const phone = String(formData.get("phone") || "").trim() || null;
@@ -21,7 +23,7 @@ export async function createCustomer(formData: FormData) {
   const latitude = parseCoord(latRaw, "lat");
   const longitude = parseCoord(lngRaw, "lng");
 
-  if (!name) return { ok: false, message: "Name is required" };
+  if (!name) return { ok: false, message: t("Name is required") };
 
   if (segment) {
     await supabaseAdmin.from("av_segments").upsert({ name: segment }, { onConflict: "name" });

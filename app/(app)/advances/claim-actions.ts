@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { parsePositive } from "@/lib/validate";
+import { getT } from "@/lib/i18n";
 
 /**
  * A rep submits a claim for cash the company owes them back, when their
@@ -18,12 +19,13 @@ import { parsePositive } from "@/lib/validate";
 export async function submitClaim(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const amount = parsePositive(formData.get("amount"));
   const notes = String(formData.get("notes") || "").trim() || null;
 
   if (amount === null) {
-    return { ok: false, message: "Enter a positive amount" };
+    return { ok: false, message: t("Enter a positive amount") };
   }
 
   const { error } = await supabaseAdmin
@@ -44,12 +46,13 @@ const NEXT_CLAIM_STATUS: Record<string, string | null> = {
 /** Owner-only — moves a claim from pending → approved → paid. */
 export async function advanceClaimStatus(claimId: string, currentStatus: string) {
   const session = await getSession();
+  const { t } = await getT();
   if (!session || session.role !== "owner") {
-    return { ok: false, message: "Not allowed" };
+    return { ok: false, message: t("Not allowed") };
   }
 
   const next = NEXT_CLAIM_STATUS[currentStatus];
-  if (!next) return { ok: false, message: "Claim is already paid" };
+  if (!next) return { ok: false, message: t("Claim is already paid") };
 
   const update: Record<string, unknown> = { status: next };
   if (next === "paid") update.resolved_at = new Date().toISOString();
@@ -63,7 +66,7 @@ export async function advanceClaimStatus(claimId: string, currentStatus: string)
     .eq("status", currentStatus)
     .select("id");
   if (error) return { ok: false, message: error.message };
-  if (!moved || moved.length === 0) return { ok: false, message: "This claim was just updated — refresh to see its status." };
+  if (!moved || moved.length === 0) return { ok: false, message: t("This claim was just updated — refresh to see its status.") };
 
   revalidatePath("/advances");
   return { ok: true };

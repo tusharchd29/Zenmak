@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { formatCurrency, isOverdue } from "@/lib/utils";
 import { fetchAll, sumPayments } from "@/lib/fetch-all";
 import { PaymentRow, type DueOrder } from "./PaymentRow";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function PaymentsPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
   const { filter } = await searchParams;
 
   const repId = getRepScope(session);
@@ -47,7 +49,7 @@ export default async function PaymentsPage({
       customerId: o.customer_id,
       // @ts-expect-error many-to-one embed is an object at runtime; the
       // untyped client infers an array.
-      customerName: o.av_customers?.name ?? "Customer",
+      customerName: o.av_customers?.name ?? t("Customer"),
       product: o.product,
       amount: o.amount ?? 0,
       paid,
@@ -73,17 +75,17 @@ export default async function PaymentsPage({
 
   return (
     <div>
-      <PageHeader title="Payment Dues" subtitle="Follow up on fulfilled orders awaiting payment" />
+      <PageHeader title={t("Payment Dues")} subtitle={t("Follow up on fulfilled orders awaiting payment")} />
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card className="text-center">
-          <div className="text-xs text-[var(--muted)]">Total outstanding</div>
+          <div className="text-xs text-[var(--muted)]">{t("Total outstanding")}</div>
           <div className="text-lg font-semibold text-[var(--ink)] mt-1">
             {formatCurrency(totalDue)}
           </div>
         </Card>
         <Card className="text-center">
-          <div className="text-xs text-[var(--muted)]">Overdue</div>
+          <div className="text-xs text-[var(--muted)]">{t("Overdue")}</div>
           <div className="text-lg font-semibold text-red-600 mt-1">
             {formatCurrency(totalOverdue)}
           </div>
@@ -99,7 +101,7 @@ export default async function PaymentsPage({
               : "border-[var(--border)] text-[var(--muted)]"
           }`}
         >
-          Outstanding ({outstanding.length})
+          {t("Outstanding ({n})", { n: outstanding.length })}
         </a>
         <a
           href="/payments?filter=overdue"
@@ -109,7 +111,7 @@ export default async function PaymentsPage({
               : "border-[var(--border)] text-[var(--muted)]"
           }`}
         >
-          Overdue ({overdue.length})
+          {t("Overdue ({n})", { n: overdue.length })}
         </a>
         <a
           href="/payments?filter=all"
@@ -119,7 +121,7 @@ export default async function PaymentsPage({
               : "border-[var(--border)] text-[var(--muted)]"
           }`}
         >
-          All ({dueOrders.length})
+          {t("All ({n})", { n: dueOrders.length })}
         </a>
       </div>
 
@@ -127,8 +129,8 @@ export default async function PaymentsPage({
         <Card>
           <EmptyState
             icon="indian-rupee"
-            title={showOverdueOnly ? "No overdue payments" : showAll ? "No fulfilled orders yet" : "All caught up"}
-            subtitle={'Payment dues appear here for fulfilled orders — including paid ones under the "All" tab.'}
+            title={showOverdueOnly ? t("No overdue payments") : showAll ? t("No fulfilled orders yet") : t("All caught up")}
+            subtitle={t('Payment dues appear here for fulfilled orders — including paid ones under the "All" tab.')}
           />
         </Card>
       ) : (

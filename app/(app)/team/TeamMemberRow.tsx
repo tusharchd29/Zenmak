@@ -4,10 +4,12 @@ import { useState, useTransition } from "react";
 import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
 import { setUserActive, setUserPin, updateUserName } from "./actions";
+import { useT } from "@/components/I18nProvider";
 
 type User = { id: string; name: string; role: "owner" | "rep"; active: boolean };
 
 export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean }) {
+  const t = useT();
   const [name, setName] = useState(user.name);
   const [active, setActive] = useState(user.active);
   const [editing, setEditing] = useState(false);
@@ -27,7 +29,7 @@ export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean })
         setName(next);
         setEditing(false);
       } else {
-        setError(result.message ?? "Couldn't save");
+        setError(result.message ?? t("Couldn't save"));
       }
     });
   }
@@ -45,7 +47,7 @@ export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean })
             className="input-field text-sm flex-1"
           />
           <button type="submit" disabled={pending} className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap">
-            {pending ? "Saving…" : "Save"}
+            {pending ? t("Saving…") : t("Save")}
           </button>
           <button
             type="button"
@@ -56,7 +58,7 @@ export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean })
             disabled={pending}
             className="text-xs text-[var(--muted)] underline whitespace-nowrap"
           >
-            Cancel
+            {t("Cancel")}
           </button>
         </form>
         {error && <div className="text-xs text-red-600 mt-2">{error}</div>}
@@ -72,21 +74,21 @@ export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean })
       const result = await setUserPin(user.id, pin);
       if (result.ok) {
         setPinOpen(false);
-        setNotice(`New PIN saved for ${name}. Tell them in person or by phone.`);
+        setNotice(t("New PIN saved for {name}. Tell them in person or by phone.", { name }));
       } else {
-        setError(result.message ?? "Couldn't save");
+        setError(result.message ?? t("Couldn't save"));
       }
     });
   }
 
   function toggleActive() {
     const next = !active;
-    if (!next && !window.confirm(`Deactivate ${name}? They won't be able to log in. Their past records stay.`)) return;
+    if (!next && !window.confirm(t("Deactivate {name}? They won't be able to log in. Their past records stay.", { name }))) return;
     setError(null);
     startTransition(async () => {
       const result = await setUserActive(user.id, next);
       if (result.ok) setActive(next);
-      else setError(result.message ?? "Couldn't save");
+      else setError(result.message ?? t("Couldn't save"));
     });
   }
 
@@ -96,11 +98,11 @@ export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean })
         <div className="min-w-0">
           <div className={`font-medium ${active ? "text-[var(--ink)]" : "text-[var(--muted)] line-through"}`}>
             {name}
-            {isSelf && <span className="text-xs text-[var(--muted)] font-normal"> (you)</span>}
+            {isSelf && <span className="text-xs text-[var(--muted)] font-normal"> {t("(you)")}</span>}
           </div>
           <div className="text-xs text-[var(--muted)] capitalize">
-            {user.role}
-            {!active && " · Inactive — can't log in"}
+            {user.role === "owner" ? t("Owner") : t("Rep")}
+            {!active && ` · ${t("Inactive — can't log in")}`}
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -112,18 +114,18 @@ export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean })
             }}
             className="text-xs text-[var(--teal)] font-medium hover:underline"
           >
-            Change PIN
+            {t("Change PIN")}
           </button>
           {!isSelf && (
             <button type="button" onClick={toggleActive} disabled={pending} className="text-xs text-[var(--muted)] hover:underline">
-              {active ? "Deactivate" : "Reactivate"}
+              {active ? t("Deactivate") : t("Reactivate")}
             </button>
           )}
           <button
             type="button"
             onClick={() => setEditing(true)}
             className="text-[var(--muted)] hover:text-[var(--teal)] p-1 -m-1"
-            aria-label={`Rename ${name}`}
+            aria-label={t("Rename {name}", { name })}
           >
             <Icon name="edit" size={16} />
           </button>
@@ -139,11 +141,11 @@ export function TeamMemberRow({ user, isSelf }: { user: User; isSelf: boolean })
             maxLength={8}
             required
             autoFocus
-            placeholder="New PIN (4–8 digits)"
+            placeholder={t("New PIN (4–8 digits)")}
             className="input-field text-sm flex-1"
           />
           <button type="submit" disabled={pending} className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap">
-            {pending ? "Saving…" : "Save PIN"}
+            {pending ? t("Saving…") : t("Save PIN")}
           </button>
         </form>
       )}

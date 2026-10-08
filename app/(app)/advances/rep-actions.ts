@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { todayIST } from "@/lib/date-range";
 import { parsePositive } from "@/lib/validate";
+import { getT } from "@/lib/i18n";
 
 /**
  * Records cash the company gives A REP to cover field expenses (distinct
@@ -17,6 +18,7 @@ import { parsePositive } from "@/lib/validate";
 export async function createRepAdvance(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "owner") redirect("/advances");
+  const { t } = await getT();
 
   const rep_id = String(formData.get("rep_id") || "");
   const amount = parsePositive(formData.get("amount"));
@@ -24,7 +26,7 @@ export async function createRepAdvance(formData: FormData) {
   const given_at = String(formData.get("given_at") || "") || todayIST();
 
   if (!rep_id || amount === null) {
-    return { ok: false, message: "Rep and a positive amount are required" };
+    return { ok: false, message: t("Rep and a positive amount are required") };
   }
 
   const { error } = await supabaseAdmin

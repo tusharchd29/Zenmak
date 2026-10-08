@@ -1,11 +1,13 @@
 "use client";
 
 import { addDaysIST } from "@/lib/date-range";
+import { useT } from "./I18nProvider";
 
 const PRESETS = [7, 15, 30, 45];
 
 /** Quick-fill buttons for a nearby `<input type="date" name={inputName}>`. */
 export function DueDatePresets({ inputName = "payment_due_date" }: { inputName?: string }) {
+  const t = useT();
   function setDays(days: number) {
     const el = document.querySelector<HTMLInputElement>(`input[name="${inputName}"]`);
     if (!el) return;
@@ -22,7 +24,7 @@ export function DueDatePresets({ inputName = "payment_due_date" }: { inputName?:
           onClick={() => setDays(d)}
           className="text-xs px-2.5 py-1 rounded-full border border-[var(--border)] text-[var(--muted)] hover:border-[var(--teal)] hover:text-[var(--teal)]"
         >
-          +{d} days
+          {t("+{days} days", { days: d })}
         </button>
       ))}
     </div>

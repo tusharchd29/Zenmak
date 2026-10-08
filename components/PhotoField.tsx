@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useActionFormPending } from "./ActionForm";
+import { useT } from "./I18nProvider";
 
 /**
  * File input for attaching a supporting-evidence photo to a Visit, Expense,
@@ -19,13 +20,14 @@ import { useActionFormPending } from "./ActionForm";
  * uploading a receipt or an already-taken photo has no way to pick from
  * their gallery. Leaving `capture` off keeps both options.
  */
-export function PhotoField({ label = "Photo (optional)" }: { label?: string }) {
+export function PhotoField({ label }: { label?: string }) {
   const [picked, setPicked] = useState<{ name: string; size: number } | null>(null);
   const pending = useActionFormPending();
+  const t = useT();
 
   return (
     <div>
-      <label className="block text-sm font-medium text-[var(--ink)] mb-1">{label}</label>
+      <label className="block text-sm font-medium text-[var(--ink)] mb-1">{label ?? t("Photo (optional)")}</label>
       <input
         type="file"
         name="photo"
@@ -40,11 +42,11 @@ export function PhotoField({ label = "Photo (optional)" }: { label?: string }) {
       <p className="text-xs text-[var(--muted)] mt-1">
         {picked
           ? `${picked.name} · ${(picked.size / (1024 * 1024)).toFixed(1)} MB`
-          : "JPEG, PNG, WEBP, or HEIC — up to 10 MB."}
+          : t("JPEG, PNG, WEBP, or HEIC — up to 10 MB.")}
       </p>
       {pending && picked && (
         <p className="text-xs text-[var(--teal)] mt-1">
-          Uploading — this can take a moment on a slow connection. Don&apos;t close this page.
+          {t("Uploading — this can take a moment on a slow connection. Don't close this page.")}
         </p>
       )}
     </div>

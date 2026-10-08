@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { PageHeader } from "@/components/PageHeader";
 import { ZONES, ZONE_LABEL } from "@/lib/utils";
 import { MapView } from "./MapViewLazy";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function MapPage({
   const session = await getSession();
   if (!session) redirect("/login");
   const { zone: zoneFilter } = await searchParams;
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const query = supabaseAdmin
@@ -32,8 +34,8 @@ export default async function MapPage({
   return (
     <div>
       <PageHeader
-        title="Territory Map"
-        subtitle={`${customers?.length ?? 0} located clinics`}
+        title={t("Territory Map")}
+        subtitle={t("{n} located clinics", { n: customers?.length ?? 0 })}
       />
 
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
@@ -45,7 +47,7 @@ export default async function MapPage({
               : "border-[var(--border)] text-[var(--muted)]"
           }`}
         >
-          All zones
+          {t("All zones")}
         </Link>
         {ZONES.map((z) => (
           <Link
@@ -57,14 +59,14 @@ export default async function MapPage({
                 : "border-[var(--border)] text-[var(--muted)]"
             }`}
           >
-            {ZONE_LABEL[z]}
+            {t(ZONE_LABEL[z])}
           </Link>
         ))}
       </div>
 
       {(!customers || customers.length === 0) && (
         <p className="text-sm text-[var(--muted)] mb-3">
-          No locations pinned yet — showing India. Capture a location while adding a customer or logging a visit to pin it here.
+          {t("No locations pinned yet — showing India. Capture a location while adding a customer or logging a visit to pin it here.")}
         </p>
       )}
 

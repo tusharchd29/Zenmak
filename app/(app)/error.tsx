@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useT } from "@/components/I18nProvider";
 import { Card } from "@/components/Card";
 
 /**
@@ -18,22 +19,23 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
     <Card className="text-center py-8">
-      <div className="font-medium text-[var(--ink)] mb-1">Something went wrong</div>
+      <div className="font-medium text-[var(--ink)] mb-1">{t("Something went wrong")}</div>
       <p className="text-sm text-[var(--muted)] mb-4">
-        This usually clears up on a retry — check your connection and try again.
+        {t("This usually clears up on a retry — check your connection and try again.")}
       </p>
       <div className="flex items-center justify-center gap-3">
         <button type="button" onClick={reset} className="btn-primary px-4 py-2 text-sm">
-          Try again
+          {t("Try again")}
         </button>
         <a href="/dashboard" className="btn-secondary px-4 py-2 text-sm">
-          Go to dashboard
+          {t("Go to dashboard")}
         </a>
       </div>
     </Card>

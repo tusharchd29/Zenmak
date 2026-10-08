@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/components/icon";
 import { cn } from "@/lib/utils";
 import { downloadFile, shareFile } from "@/lib/share-pdf";
+import { useT } from "@/components/I18nProvider";
 
 export type BundleProduct = { slug: string; name: string; detailPages: number | null };
 export type BundleGroup = { id: string; name: string; products: BundleProduct[] };
@@ -32,6 +33,7 @@ function sheetPath(p: BundleProduct, mode: "detail" | "summary") {
  * pdf-lib is only loaded when someone actually builds a bundle.
  */
 export function BundleBuilder({ groups, labels }: { groups: BundleGroup[]; labels: Labels }) {
+  const t = useT();
   const [selected, setSelected] = useState<string[]>([]);
   const [mode, setMode] = useState<"detail" | "summary">("detail");
   const [busy, setBusy] = useState(false);
@@ -58,7 +60,7 @@ export function BundleBuilder({ groups, labels }: { groups: BundleGroup[]; label
     out.setAuthor("Zenmak Animal Health Division");
     for (const p of chosen) {
       const res = await fetch(sheetPath(p, mode));
-      if (!res.ok) throw new Error(`Couldn't load ${p.name} (${res.status})`);
+      if (!res.ok) throw new Error(t("Couldn't load {name} ({status})", { name: p.name, status: res.status }));
       const src = await PDFDocument.load(await res.arrayBuffer());
       const pages = await out.copyPages(src, src.getPageIndices());
       pages.forEach((page) => out.addPage(page));
@@ -82,7 +84,7 @@ export function BundleBuilder({ groups, labels }: { groups: BundleGroup[]; label
         downloadFile(file);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't build the PDF.");
+      setError(err instanceof Error ? err.message : t("Couldn't build the PDF."));
     } finally {
       setBusy(false);
     }

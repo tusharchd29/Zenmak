@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useT } from "@/components/I18nProvider";
 
 /**
  * Root-level backstop, for anything that throws outside the `(app)` route
@@ -16,6 +17,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -34,9 +36,9 @@ export default function GlobalError({
         fontFamily: "system-ui, sans-serif",
       }}
     >
-      <div style={{ fontWeight: 600, fontSize: "16px" }}>Something went wrong</div>
+      <div style={{ fontWeight: 600, fontSize: "16px" }}>{t("Something went wrong")}</div>
       <p style={{ color: "#6b7c79", fontSize: "14px", maxWidth: "320px" }}>
-        Check your connection and try again.
+        {t("Check your connection and try again.")}
       </p>
       <div style={{ display: "flex", gap: "12px" }}>
         <button
@@ -52,7 +54,7 @@ export default function GlobalError({
             fontWeight: 500,
           }}
         >
-          Try again
+          {t("Try again")}
         </button>
         <a
           href="/login"
@@ -66,7 +68,7 @@ export default function GlobalError({
             textDecoration: "none",
           }}
         >
-          Back to login
+          {t("Back to login")}
         </a>
       </div>
     </div>

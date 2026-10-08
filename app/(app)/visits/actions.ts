@@ -8,10 +8,12 @@ import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { attachPhotoIfPresent } from "@/lib/photos";
 import { todayIST } from "@/lib/date-range";
 import { parseCoord } from "@/lib/validate";
+import { getT } from "@/lib/i18n";
 
 export async function createVisit(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const customer_id = String(formData.get("customer_id") || "");
   const purpose = String(formData.get("purpose") || "").trim() || null;
@@ -26,11 +28,11 @@ export async function createVisit(formData: FormData) {
   const latitude = parseCoord(latRaw, "lat");
   const longitude = parseCoord(lngRaw, "lng");
 
-  if (!customer_id) return { ok: false, message: "Customer is required" };
+  if (!customer_id) return { ok: false, message: t("Customer is required") };
   try {
     await assertCanUseCustomer(session, customer_id);
   } catch {
-    return { ok: false, message: "Record not found." };
+    return { ok: false, message: t("Record not found.") };
   }
 
   const { data: inserted, error } = await supabaseAdmin
@@ -60,7 +62,9 @@ export async function createVisit(formData: FormData) {
     revalidatePath("/visits");
     return {
       ok: false,
-      message: `Visit saved, but the photo didn't upload: ${err instanceof Error ? err.message : "unknown error"}. You can retry the photo from the visit's edit view.`,
+      message: t("Visit saved, but the photo didn't upload: {error}. You can retry the photo from the visit's edit view.", {
+        error: err instanceof Error ? t(err.message) : t("unknown error"),
+      }),
     };
   }
 

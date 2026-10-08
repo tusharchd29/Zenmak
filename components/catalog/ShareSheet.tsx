@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { absoluteUrl, downloadFile, fetchPdf, shareFile, whatsappHref } from "@/lib/share-pdf";
+import { useT } from "@/components/I18nProvider";
 
 export type ShareItem = {
   /** Shown as the row title, e.g. "Detailed brochure · 4 pages". */
@@ -40,6 +41,7 @@ export function ShareSheet({
   messagePrefix: string;
   labels: Labels;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +54,7 @@ export function ShareSheet({
       const shared = await shareFile(file, `${messagePrefix} ${item.label}`);
       if (!shared) window.open(whatsappHref(`${messagePrefix} ${item.label}\n${url}`), "_blank", "noopener");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't share that file. Check your connection.");
+      setError(err instanceof Error ? err.message : t("Couldn't share that file. Check your connection."));
     } finally {
       setBusy(null);
     }
@@ -64,7 +66,7 @@ export function ShareSheet({
     try {
       downloadFile(await fetchPdf(item.file, item.filename));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Download failed. Check your connection.");
+      setError(err instanceof Error ? err.message : t("Download failed. Check your connection."));
     } finally {
       setBusy(null);
     }

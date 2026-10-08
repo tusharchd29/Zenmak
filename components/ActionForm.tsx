@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "./I18nProvider";
 
 export type ActionResult = { ok: boolean; message?: string } | void | undefined;
 
@@ -55,6 +56,7 @@ export function ActionForm({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const t = useT();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -65,7 +67,7 @@ export function ActionForm({
         const result = await action(fd);
         if (result && result.ok === false) {
           setError(
-            result.message || "Something went wrong. Check your connection and try again.",
+            result.message || t("Something went wrong. Check your connection and try again."),
           );
           return;
         }
@@ -79,8 +81,8 @@ export function ActionForm({
       } catch (err) {
         setError(
           err instanceof Error
-            ? err.message
-            : "Something went wrong. Check your connection and try again.",
+            ? t(err.message)
+            : t("Something went wrong. Check your connection and try again."),
         );
       }
     });

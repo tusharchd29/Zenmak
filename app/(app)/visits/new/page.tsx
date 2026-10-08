@@ -10,12 +10,14 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { PhotoField } from "@/components/PhotoField";
 import { ActionForm } from "@/components/ActionForm";
 import { todayIST } from "@/lib/date-range";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewVisitPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const query = supabaseAdmin.from("av_customers").select("id, name").order("name");
@@ -24,16 +26,16 @@ export default async function NewVisitPage() {
 
   return (
     <div>
-      <PageHeader title="Log a visit" />
+      <PageHeader title={t("Log a visit")} />
       <Card>
         <ActionForm action={createVisit} redirectTo="/visits" className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Customer
+              {t("Customer")}
             </label>
             <select name="customer_id" required className="input-field" defaultValue="">
               <option value="" disabled>
-                Select a customer
+                {t("Select a customer")}
               </option>
               {(customers ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
@@ -44,7 +46,7 @@ export default async function NewVisitPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Visit date
+              {t("Visit date")}
             </label>
             <input
               type="date"
@@ -55,34 +57,34 @@ export default async function NewVisitPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Purpose
+              {t("Purpose")}
             </label>
-            <input name="purpose" className="input-field" placeholder="e.g. Order follow-up" />
+            <input name="purpose" className="input-field" placeholder={t("e.g. Order follow-up")} />
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Discussion summary
+              {t("Discussion summary")}
             </label>
             <textarea
               name="discussion_summary"
               rows={3}
               className="input-field"
-              placeholder="What was discussed"
+              placeholder={t("What was discussed")}
             />
           </div>
           <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
             <input type="checkbox" name="follow_up_required" className="w-4 h-4" />
-            Needs a follow-up
+            {t("Needs a follow-up")}
           </label>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Next visit date
+              {t("Next visit date")}
             </label>
             <input type="date" name="next_visit_date" className="input-field" />
           </div>
-          <LocationCapture label="Visit location" />
+          <LocationCapture label={t("Visit location")} />
           <PhotoField />
-          <SubmitButton>Save visit</SubmitButton>
+          <SubmitButton>{t("Save visit")}</SubmitButton>
         </ActionForm>
       </Card>
     </div>

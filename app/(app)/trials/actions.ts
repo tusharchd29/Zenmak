@@ -6,10 +6,12 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { todayIST } from "@/lib/date-range";
+import { getT } from "@/lib/i18n";
 
 export async function createTrial(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const customer_id = String(formData.get("customer_id") || "");
   const product = String(formData.get("product") || "").trim();
@@ -18,12 +20,12 @@ export async function createTrial(formData: FormData) {
   const outcome_notes = String(formData.get("outcome_notes") || "").trim() || null;
 
   if (!customer_id || !product) {
-    return { ok: false, message: "Customer and product are required" };
+    return { ok: false, message: t("Customer and product are required") };
   }
   try {
     await assertCanUseCustomer(session, customer_id);
   } catch {
-    return { ok: false, message: "Record not found." };
+    return { ok: false, message: t("Record not found.") };
   }
 
   const { error } = await supabaseAdmin.from("av_product_trials").insert({

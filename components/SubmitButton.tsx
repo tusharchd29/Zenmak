@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useActionFormPending } from "./ActionForm";
+import { useT } from "./I18nProvider";
 
 /**
  * Submit button for a form wrapped in `<ActionForm>`. Disables itself and
@@ -18,13 +19,14 @@ export function SubmitButton({
   className?: string;
 }) {
   const pending = useActionFormPending();
+  const t = useT();
   return (
     <button
       type="submit"
       disabled={pending}
       className={cn("btn-primary w-full py-2.5", className)}
     >
-      {pending ? (pendingLabel ?? "Saving…") : children}
+      {pending ? (pendingLabel ?? t("Saving…")) : children}
     </button>
   );
 }

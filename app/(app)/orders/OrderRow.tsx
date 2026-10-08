@@ -8,18 +8,20 @@ import { formatCurrency, formatDate, ageingLabel, type OrderStatus } from "@/lib
 import { advanceOrderStatus, revertOrderStatus, updateOrderItems } from "./actions";
 import { updateEntry } from "../_shared/actions";
 import { OrderItemsField, type CatalogProduct } from "./OrderItemsField";
+import { useT } from "@/components/I18nProvider";
+import { msg } from "@/lib/i18n-shared";
 
 const NEXT_LABEL: Record<OrderStatus, string | null> = {
-  pending: "Confirm order",
-  confirmed: "Mark dispatched",
-  dispatched: "Mark fulfilled",
+  pending: msg("Confirm order"),
+  confirmed: msg("Mark dispatched"),
+  dispatched: msg("Mark fulfilled"),
   fulfilled: null,
 };
 const PREV_LABEL: Record<OrderStatus, string | null> = {
   pending: null,
-  confirmed: "Move back to pending",
-  dispatched: "Move back to confirmed",
-  fulfilled: "Move back to dispatched",
+  confirmed: msg("Move back to pending"),
+  dispatched: msg("Move back to confirmed"),
+  fulfilled: msg("Move back to dispatched"),
 };
 
 type Order = {
@@ -51,6 +53,7 @@ export function OrderRow({
   products?: CatalogProduct[];
   showRep?: boolean;
 }) {
+  const t = useT();
   const hasItems = items.length > 0;
   const [status, setStatus] = useState(order.status);
   const [pending, startTransition] = useTransition();
@@ -107,7 +110,7 @@ export function OrderRow({
         };
         if (!hasItems) {
           const product = String(fd.get("product") || "").trim();
-          if (!product) throw new Error("Product is required");
+          if (!product) throw new Error(t("Product is required"));
           payload.product = product;
           payload.quantity = String(fd.get("quantity") || "").trim() || null;
           const amountRaw = String(fd.get("amount") || "");
@@ -116,7 +119,7 @@ export function OrderRow({
         await updateEntry("av_orders", order.id, payload, ["/orders", "/payments", "/dashboard"]);
         setEditing(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Couldn't save changes");
+        setError(err instanceof Error ? err.message : t("Couldn't save changes"));
       }
     });
   }
@@ -137,12 +140,12 @@ export function OrderRow({
           ) : (
             <>
               <div>
-                <label className="block text-xs font-medium text-[var(--ink)] mb-1">Product</label>
+                <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Product")}</label>
                 <input name="product" defaultValue={order.product} className="input-field text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[var(--ink)] mb-1">Quantity</label>
+                  <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Quantity")}</label>
                   <input
                     name="quantity"
                     defaultValue={order.quantity ?? ""}
@@ -150,7 +153,7 @@ export function OrderRow({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[var(--ink)] mb-1">Amount (₹)</label>
+                  <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Amount (₹)")}</label>
                   <input
                     name="amount"
                     type="number"
@@ -163,7 +166,7 @@ export function OrderRow({
             </>
           )}
           <div>
-            <label className="block text-xs font-medium text-[var(--ink)] mb-1">Payment due date</label>
+            <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Payment due date")}</label>
             <input
               type="date"
               name="payment_due_date"
@@ -172,7 +175,7 @@ export function OrderRow({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--ink)] mb-1">Notes</label>
+            <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Notes")}</label>
             <textarea
               name="notes"
               rows={2}
@@ -183,7 +186,7 @@ export function OrderRow({
           {error && <div className="text-xs text-red-600">{error}</div>}
           <div className="flex gap-2">
             <button type="submit" disabled={editPending} className="btn-primary text-xs px-4 py-1.5">
-              {editPending ? "Saving…" : "Save"}
+              {editPending ? t("Saving…") : t("Save")}
             </button>
             <button
               type="button"
@@ -194,7 +197,7 @@ export function OrderRow({
               disabled={editPending}
               className="text-xs text-[var(--muted)] underline"
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </form>
@@ -213,7 +216,7 @@ export function OrderRow({
           · {formatCurrency(order.amount)}
         </div>
         <div className="text-xs text-[var(--muted)] mt-0.5">
-          {formatDate(order.created_at)} · {ageingLabel(order)}
+          {formatDate(order.created_at)} · {ageingLabel(order, t)}
           {showRep && order.repName && <> · {order.repName}</>}
         </div>
       </div>
@@ -224,7 +227,7 @@ export function OrderRow({
             type="button"
             onClick={() => setEditing(true)}
             className="text-[var(--muted)] hover:text-[var(--teal)] p-1 -m-1"
-            aria-label="Edit"
+            aria-label={t("Edit")}
           >
             <Icon name="edit" size={16} />
           </button>
@@ -236,7 +239,7 @@ export function OrderRow({
             disabled={pending}
             className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
           >
-            {pending ? "Updating…" : label}
+            {pending ? t("Updating…") : t(label)}
           </button>
         )}
         {PREV_LABEL[status] && (
@@ -246,7 +249,7 @@ export function OrderRow({
             disabled={pending}
             className="text-xs text-[var(--muted)] underline whitespace-nowrap"
           >
-            {PREV_LABEL[status]}
+            {t(PREV_LABEL[status]!)}
           </button>
         )}
       </div>

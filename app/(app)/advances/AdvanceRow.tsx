@@ -6,6 +6,7 @@ import { Icon } from "@/components/icon";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { settleAdvance } from "./actions";
 import { updateEntry } from "../_shared/actions";
+import { useT } from "@/components/I18nProvider";
 
 export function AdvanceRow({
   advance,
@@ -18,6 +19,7 @@ export function AdvanceRow({
     customerName: string;
   };
 }) {
+  const t = useT();
   const [status, setStatus] = useState(advance.status);
   const [amount, setAmount] = useState(advance.amount);
   const [editing, setEditing] = useState(false);
@@ -28,7 +30,7 @@ export function AdvanceRow({
   function save() {
     const value = Number(amountInput);
     if (!value || value <= 0) {
-      setError("Enter a valid amount");
+      setError(t("Enter a valid amount"));
       return;
     }
     setError(null);
@@ -38,7 +40,7 @@ export function AdvanceRow({
         setAmount(value);
         setEditing(false);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Couldn't save changes");
+        setError(e instanceof Error ? e.message : t("Couldn't save changes"));
       }
     });
   }
@@ -49,7 +51,7 @@ export function AdvanceRow({
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-[var(--ink)] mb-1">
-              Amount (₹)
+              {t("Amount (₹)")}
             </label>
             <input
               type="number"
@@ -62,7 +64,7 @@ export function AdvanceRow({
           {error && <div className="text-xs text-red-600">{error}</div>}
           <div className="flex gap-2">
             <button type="button" onClick={save} disabled={pending} className="btn-primary text-xs px-4 py-1.5">
-              {pending ? "Saving…" : "Save"}
+              {pending ? t("Saving…") : t("Save")}
             </button>
             <button
               type="button"
@@ -74,7 +76,7 @@ export function AdvanceRow({
               disabled={pending}
               className="text-xs text-[var(--muted)] underline"
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </div>
@@ -102,18 +104,18 @@ export function AdvanceRow({
             }
             className="btn-secondary text-xs px-3 py-1.5"
           >
-            {pending ? "…" : "Mark settled"}
+            {pending ? "…" : t("Mark settled")}
           </button>
         ) : (
           <span className="status-fulfilled px-2.5 py-1 rounded-full text-xs font-semibold">
-            Settled
+            {t("Settled")}
           </span>
         )}
         <button
           type="button"
           onClick={() => setEditing(true)}
           className="text-[var(--muted)] hover:text-[var(--teal)] p-1 -m-1"
-          aria-label="Edit"
+          aria-label={t("Edit")}
         >
           <Icon name="edit" size={16} />
         </button>

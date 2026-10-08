@@ -11,6 +11,7 @@ import { OrderRow } from "./OrderRow";
 import type { OrderStatus } from "@/lib/utils";
 import { parseDateRange, dayStart, dayEnd } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function OrdersPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
   const range = parseDateRange(await searchParams);
 
   const repId = getRepScope(session);
@@ -65,11 +67,11 @@ export default async function OrdersPage({
   return (
     <div>
       <PageHeader
-        title="Orders"
-        subtitle="Pending → Confirmed → Dispatched → Fulfilled"
+        title={t("Orders")}
+        subtitle={t("Pending → Confirmed → Dispatched → Fulfilled")}
         action={
           <Link href="/orders/new" className="btn-primary px-4 py-2 text-sm inline-flex items-center gap-1.5">
-            <Icon name="plus" size={15} /> New order
+            <Icon name="plus" size={15} /> {t("New order")}
           </Link>
         }
       />
@@ -78,7 +80,7 @@ export default async function OrdersPage({
 
       {!orders || orders.length === 0 ? (
         <Card>
-          <EmptyState icon="package" title="No orders yet" subtitle="Create your first sales order." />
+          <EmptyState icon="package" title={t("No orders yet")} subtitle={t("Create your first sales order.")} />
         </Card>
       ) : (
         <div className="space-y-2">
@@ -98,7 +100,7 @@ export default async function OrdersPage({
                 notes: o.notes,
                 payment_due_date: o.payment_due_date,
                 // @ts-expect-error joined relation
-                customerName: o.av_customers?.name ?? "Customer",
+                customerName: o.av_customers?.name ?? t("Customer"),
                 // @ts-expect-error joined relation
                 repName: o.av_users?.name ?? null,
               }}

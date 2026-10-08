@@ -6,6 +6,7 @@ import { getRepScope } from "./data";
 import { getEffectiveTargets } from "./targets";
 import type { Session } from "./session";
 import type { OrderStatus } from "./utils";
+import { msg } from "./i18n-shared";
 
 // The seven report types the owner can mix and match into one PDF. A rep
 // always gets all of them for their own data; the owner additionally picks
@@ -23,14 +24,14 @@ export const REPORT_SECTIONS = [
 export type ReportSection = (typeof REPORT_SECTIONS)[number];
 
 export const REPORT_SECTION_LABEL: Record<ReportSection, string> = {
-  visits: "Visits",
-  expenses: "Expenses",
-  orders: "Orders & payments",
-  travel: "Travel & reimbursement",
-  advances: "Advances & claims",
-  targets: "Targets vs achievement",
-  tours: "Tour coverage",
-  learning: "Learning & tests",
+  visits: msg("Visits"),
+  expenses: msg("Expenses"),
+  orders: msg("Orders & payments"),
+  travel: msg("Travel & reimbursement"),
+  advances: msg("Advances & claims"),
+  targets: msg("Targets vs achievement"),
+  tours: msg("Tour coverage"),
+  learning: msg("Learning & tests"),
 };
 
 export type ReportCustomer = {

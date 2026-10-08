@@ -10,12 +10,14 @@ import { getStatesByZone } from "@/lib/data";
 import { createCustomer } from "../actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewCustomerPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const [{ data: segments }, statesByZone] = await Promise.all([
     supabaseAdmin.from("av_segments").select("name").order("name"),
@@ -24,40 +26,40 @@ export default async function NewCustomerPage() {
 
   return (
     <div>
-      <PageHeader title="New customer" subtitle="Add a clinic or farm" />
+      <PageHeader title={t("New customer")} subtitle={t("Add a clinic or farm")} />
       <Card>
         <ActionForm action={createCustomer} redirectTo="/customers" className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Name
+              {t("Name")}
             </label>
-            <input name="name" required className="input-field" placeholder="Clinic name" />
+            <input name="name" required className="input-field" placeholder={t("Clinic name")} />
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Phone
+              {t("Phone")}
             </label>
-            <input name="phone" className="input-field" placeholder="Optional" />
+            <input name="phone" className="input-field" placeholder={t("Optional")} />
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Address
+              {t("Address")}
             </label>
-            <input name="address" className="input-field" placeholder="Optional" />
+            <input name="address" className="input-field" placeholder={t("Optional")} />
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Segment
+              {t("Segment")}
             </label>
             <Autocomplete
               name="segment"
-              placeholder="e.g. Retail, Farm, Hospital"
+              placeholder={t("e.g. Retail, Farm, Hospital")}
               options={(segments ?? []).map((s) => s.name)}
             />
           </div>
           <ZoneStateSelect statesByZone={statesByZone} />
-          <LocationCapture label="Location" />
-          <SubmitButton>Save customer</SubmitButton>
+          <LocationCapture label={t("Location")} />
+          <SubmitButton>{t("Save customer")}</SubmitButton>
         </ActionForm>
       </Card>
     </div>

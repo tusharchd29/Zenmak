@@ -6,21 +6,23 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { parsePositive } from "@/lib/validate";
+import { getT } from "@/lib/i18n";
 
 export async function createAdvance(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const customer_id = String(formData.get("customer_id") || "");
   const amount = parsePositive(formData.get("amount"));
 
   if (!customer_id || amount === null) {
-    return { ok: false, message: "Customer and a positive amount are required" };
+    return { ok: false, message: t("Customer and a positive amount are required") };
   }
   try {
     await assertCanUseCustomer(session, customer_id);
   } catch {
-    return { ok: false, message: "Record not found." };
+    return { ok: false, message: t("Record not found.") };
   }
 
   const { error } = await supabaseAdmin.from("av_advances").insert({
@@ -39,10 +41,11 @@ export async function createAdvance(formData: FormData) {
 export async function settleAdvance(advanceId: string) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
   try {
     await assertCanAccessRow(session, "av_advances", advanceId);
   } catch {
-    return { ok: false, message: "Record not found." };
+    return { ok: false, message: t("Record not found.") };
   }
 
   // Only a pending advance can be settled — a second tap must not move
@@ -55,7 +58,7 @@ export async function settleAdvance(advanceId: string) {
     .select("id");
 
   if (error) return { ok: false, message: error.message };
-  if (!settled || settled.length === 0) return { ok: false, message: "This advance is already settled." };
+  if (!settled || settled.length === 0) return { ok: false, message: t("This advance is already settled.") };
 
   revalidatePath("/advances");
   return { ok: true };

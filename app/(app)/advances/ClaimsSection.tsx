@@ -3,6 +3,8 @@
 import { useRef, useState, useTransition } from "react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { submitClaim, advanceClaimStatus } from "./claim-actions";
+import { useT } from "@/components/I18nProvider";
+import { msg } from "@/lib/i18n-shared";
 
 export type Claim = {
   id: string;
@@ -13,13 +15,13 @@ export type Claim = {
 };
 
 const STATUS_LABEL: Record<Claim["status"], string> = {
-  pending: "Pending",
-  approved: "Approved",
-  paid: "Paid",
+  pending: msg("Pending"),
+  approved: msg("Approved"),
+  paid: msg("Paid"),
 };
 const NEXT_LABEL: Record<Claim["status"], string | null> = {
-  pending: "Approve",
-  approved: "Mark paid",
+  pending: msg("Approve"),
+  approved: msg("Mark paid"),
   paid: null,
 };
 
@@ -42,6 +44,7 @@ export function ClaimsSection({
   canSubmit: boolean;
   canResolve: boolean;
 }) {
+  const t = useT();
   const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
@@ -54,7 +57,7 @@ export function ClaimsSection({
     startTransition(async () => {
       const result = await submitClaim(fd);
       if (!result.ok) {
-        setError(result.message || "Couldn't submit claim");
+        setError(result.message || t("Couldn't submit claim"));
         return;
       }
       formRef.current?.reset();
@@ -66,7 +69,7 @@ export function ClaimsSection({
     setError(null);
     startTransition(async () => {
       const result = await advanceClaimStatus(claimId, status);
-      if (!result.ok) setError(result.message || "Couldn't update claim");
+      if (!result.ok) setError(result.message || t("Couldn't update claim"));
     });
   }
 
@@ -80,7 +83,7 @@ export function ClaimsSection({
             <div key={c.id} className="flex items-center justify-between gap-2 text-xs">
               <div className="min-w-0">
                 <span className="text-[var(--ink)]">{formatCurrency(c.amount)}</span>
-                <span className="text-[var(--muted)]"> · {formatDate(c.created_at)} · {STATUS_LABEL[c.status]}</span>
+                <span className="text-[var(--muted)]"> · {formatDate(c.created_at)} · {t(STATUS_LABEL[c.status])}</span>
                 {c.notes && <div className="text-[var(--muted)] truncate">{c.notes}</div>}
               </div>
               {canResolve && NEXT_LABEL[c.status] && (
@@ -90,7 +93,7 @@ export function ClaimsSection({
                   onClick={() => resolve(c.id, c.status)}
                   className="btn-secondary text-xs px-2 py-1 whitespace-nowrap shrink-0"
                 >
-                  {NEXT_LABEL[c.status]}
+                  {t(NEXT_LABEL[c.status] as string)}
                 </button>
               )}
             </div>
@@ -111,10 +114,10 @@ export function ClaimsSection({
               defaultValue={Math.abs(balance)}
               className="input-field text-xs py-1.5"
             />
-            <input name="notes" placeholder="Notes (optional)" className="input-field text-xs py-1.5" />
+            <input name="notes" placeholder={t("Notes (optional)")} className="input-field text-xs py-1.5" />
             <div className="flex gap-2">
               <button type="submit" disabled={pending} className="btn-primary text-xs px-3 py-1.5">
-                {pending ? "Submitting…" : "Submit claim"}
+                {pending ? t("Submitting…") : t("Submit claim")}
               </button>
               <button
                 type="button"
@@ -122,7 +125,7 @@ export function ClaimsSection({
                 disabled={pending}
                 className="text-xs text-[var(--muted)] underline"
               >
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           </form>
@@ -132,7 +135,7 @@ export function ClaimsSection({
             onClick={() => setShowForm(true)}
             className="text-xs text-[var(--teal)] font-medium"
           >
-            Submit excess as a claim
+            {t("Submit excess as a claim")}
           </button>
         )
       )}

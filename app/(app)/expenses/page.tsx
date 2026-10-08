@@ -16,6 +16,7 @@ import { getPhotosForEntities } from "@/lib/photos";
 import { ActionForm } from "@/components/ActionForm";
 import { parseDateRange, todayIST } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function ExpensesPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
   const params = await searchParams;
   const range = parseDateRange(params);
   const isOwner = session.role === "owner";
@@ -97,34 +99,34 @@ export default async function ExpensesPage({
 
   return (
     <div>
-      <PageHeader title="Expenses" subtitle="Field expense claims" />
+      <PageHeader title={t("Expenses")} subtitle={t("Field expense claims")} />
 
       <DateRangeFilter />
 
       <Card className="mb-6">
-        <div className="font-medium text-[var(--ink)] mb-3">Log an expense</div>
+        <div className="font-medium text-[var(--ink)] mb-3">{t("Log an expense")}</div>
         <ActionForm action={createExpense} resetOnSuccess className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Category
+                {t("Category")}
               </label>
               <Autocomplete
                 name="category"
                 required
-                placeholder="e.g. Fuel"
+                placeholder={t("e.g. Fuel")}
                 options={categories as string[]}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Amount (₹)
+                {t("Amount (₹)")}
               </label>
               <input name="amount" type="number" step="0.01" required className="input-field" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">Date</label>
+            <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Date")}</label>
             <input
               type="date"
               name="expense_date"
@@ -133,23 +135,23 @@ export default async function ExpensesPage({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">Note</label>
-            <input name="note" className="input-field" placeholder="Optional" />
+            <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Note")}</label>
+            <input name="note" className="input-field" placeholder={t("Optional")} />
           </div>
-          <PhotoField label="Receipt photo (optional)" />
-          <SubmitButton>Add expense</SubmitButton>
+          <PhotoField label={t("Receipt photo (optional)")} />
+          <SubmitButton>{t("Add expense")}</SubmitButton>
         </ActionForm>
       </Card>
 
       {showGroupedSummary ? (
         <>
           <Card className="mb-4 flex items-center justify-between">
-            <div className="text-sm text-[var(--muted)]">Total across all reps</div>
+            <div className="text-sm text-[var(--muted)]">{t("Total across all reps")}</div>
             <div className="text-lg font-semibold text-[var(--ink)]">{formatCurrency(grandTotal)}</div>
           </Card>
           {repGroups.length === 0 ? (
             <Card>
-              <EmptyState icon="receipt" title="No expenses logged" />
+              <EmptyState icon="receipt" title={t("No expenses logged")} />
             </Card>
           ) : (
             <div className="space-y-2">
@@ -163,7 +165,9 @@ export default async function ExpensesPage({
                     <div>
                       <div className="font-medium text-[var(--ink)]">{g.name}</div>
                       <div className="text-sm text-[var(--muted)]">
-                        {g.count} expense{g.count === 1 ? "" : "s"} · tap to view
+                        {g.count === 1
+                          ? t("{n} expense · tap to view", { n: g.count })
+                          : t("{n} expenses · tap to view", { n: g.count })}
                       </div>
                     </div>
                     <div className="font-medium text-[var(--ink)]">{formatCurrency(g.total)}</div>
@@ -181,13 +185,13 @@ export default async function ExpensesPage({
                 href={`/expenses${rangeSuffix ? `?${rangeSuffix}` : ""}`}
                 className="text-sm text-[var(--teal)] font-medium inline-flex items-center gap-1"
               >
-                ← All reps
+                {t("← All reps")}
               </a>
             </div>
           )}
           {expenses.length === 0 ? (
             <Card>
-              <EmptyState icon="receipt" title="No expenses logged" />
+              <EmptyState icon="receipt" title={t("No expenses logged")} />
             </Card>
           ) : (
             <div className="space-y-2">
@@ -204,10 +208,10 @@ export default async function ExpensesPage({
                 expense_date: e.expense_date,
               }}
               fields={[
-                { name: "category", label: "Category", type: "text" },
-                { name: "amount", label: "Amount (₹)", type: "number" },
-                { name: "expense_date", label: "Date", type: "date" },
-                { name: "note", label: "Note", type: "text" },
+                { name: "category", label: t("Category"), type: "text" },
+                { name: "amount", label: t("Amount (₹)"), type: "number" },
+                { name: "expense_date", label: t("Date"), type: "date" },
+                { name: "note", label: t("Note"), type: "text" },
               ]}
               className="flex items-center justify-between"
             >

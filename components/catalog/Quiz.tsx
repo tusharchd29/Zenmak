@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { cn } from "@/lib/utils";
 import { submitQuiz, type QuizResult } from "@/app/(app)/learn/actions";
+import { useT } from "@/components/I18nProvider";
 
 export type QuizView = { id: string; q: string; options: string[] };
 
@@ -15,6 +16,7 @@ export function Quiz({ slug, questions, labels }: { slug: string; questions: Qui
   const [result, setResult] = useState<QuizResult | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const t = useT();
 
   const done = result?.ok && result.correct;
   const allAnswered = answers.every((a) => a !== null);
@@ -26,7 +28,7 @@ export function Quiz({ slug, questions, labels }: { slug: string; questions: Qui
         setResult(r);
         if (r.ok) router.refresh();
       } catch (err) {
-        setResult({ ok: false, message: err instanceof Error ? err.message : "Couldn't check answers." });
+        setResult({ ok: false, message: err instanceof Error ? err.message : t("Couldn't check answers.") });
       }
     });
   }
@@ -88,7 +90,7 @@ export function Quiz({ slug, questions, labels }: { slug: string; questions: Qui
           <div className="text-sm mt-0.5">
             {labels.score}: {result.score} / {result.total}
           </div>
-          {result.saved === false && <div className="text-xs mt-1 opacity-80">(Progress isn&apos;t being saved yet.)</div>}
+          {result.saved === false && <div className="text-xs mt-1 opacity-80">({t("Progress isn't being saved yet.")})</div>}
           <button
             type="button"
             onClick={() => {

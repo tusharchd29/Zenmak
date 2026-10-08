@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { ZONES, ZONE_LABEL, type Zone } from "@/lib/utils";
 import { ZoneStateRow } from "./ZoneStateRow";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function ZonesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "owner") redirect("/dashboard");
+  const { t } = await getT();
 
   const { data: states } = await supabaseAdmin
     .from("av_zone_states")
@@ -28,8 +30,8 @@ export default async function ZonesPage() {
   return (
     <div>
       <PageHeader
-        title="Zones & States"
-        subtitle="Reference only — see which states sit in each zone and move a state across zones. Doesn't change any customer's own zone."
+        title={t("Zones & States")}
+        subtitle={t("Reference only — see which states sit in each zone and move a state across zones. Doesn't change any customer's own zone.")}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         {ZONES.map((z) => {
@@ -37,11 +39,11 @@ export default async function ZonesPage() {
           return (
             <Card key={z}>
               <div className="font-medium text-[var(--ink)] mb-2 flex items-baseline justify-between">
-                <span>{ZONE_LABEL[z]}</span>
-                <span className="text-xs text-[var(--muted)] font-normal">{list.length} states</span>
+                <span>{t(ZONE_LABEL[z])}</span>
+                <span className="text-xs text-[var(--muted)] font-normal">{t("{n} states", { n: list.length })}</span>
               </div>
               {list.length === 0 ? (
-                <div className="text-xs text-[var(--muted)]">No states in this zone</div>
+                <div className="text-xs text-[var(--muted)]">{t("No states in this zone")}</div>
               ) : (
                 <div>
                   {list.map((s) => (

@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { createContact, deleteContact } from "./contacts-actions";
 import { Icon } from "@/components/icon";
+import { useT } from "@/components/I18nProvider";
 
 export type Contact = { id: string; name: string; role: string | null; phone: string | null };
 
@@ -16,6 +17,7 @@ export function CustomerContacts({
   customerId: string;
   contacts: Contact[];
 }) {
+  const t = useT();
   const [adding, setAdding] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export function CustomerContacts({
     startTransition(async () => {
       const result = await createContact(fd);
       if (!result.ok) {
-        setError(result.message || "Couldn't add that contact");
+        setError(result.message || t("Couldn't add that contact"));
         return;
       }
       formRef.current?.reset();
@@ -40,13 +42,13 @@ export function CustomerContacts({
     setError(null);
     startTransition(async () => {
       const result = await deleteContact(id, customerId);
-      if (!result.ok) setError(result.message || "Couldn't remove that contact");
+      if (!result.ok) setError(result.message || t("Couldn't remove that contact"));
     });
   }
 
   return (
     <div className="mb-6">
-      <div className="font-medium text-[var(--ink)] mb-2">Other contacts</div>
+      <div className="font-medium text-[var(--ink)] mb-2">{t("Other contacts")}</div>
 
       {contacts.length > 0 && (
         <div className="space-y-1.5 mb-2">
@@ -62,7 +64,7 @@ export function CustomerContacts({
                 disabled={pending}
                 onClick={() => remove(c.id)}
                 className="text-[var(--muted)] hover:text-red-600 shrink-0 p-1 disabled:opacity-30"
-                aria-label="Remove contact"
+                aria-label={t("Remove contact")}
               >
                 <Icon name="x" size={14} />
               </button>
@@ -72,7 +74,7 @@ export function CustomerContacts({
       )}
 
       {contacts.length === 0 && !adding && (
-        <div className="text-sm text-[var(--muted)] mb-2">No other contacts added yet.</div>
+        <div className="text-sm text-[var(--muted)] mb-2">{t("No other contacts added yet.")}</div>
       )}
 
       {error && <div className="text-xs text-red-700 mb-2">{error}</div>}
@@ -80,18 +82,18 @@ export function CustomerContacts({
       {adding ? (
         <form ref={formRef} onSubmit={handleAdd} className="space-y-2">
           <input type="hidden" name="customer_id" value={customerId} />
-          <input name="name" required placeholder="Name" className="input-field text-sm" />
+          <input name="name" required placeholder={t("Name")} className="input-field text-sm" />
           <div className="grid grid-cols-2 gap-2">
             <input
               name="role"
-              placeholder="Role (e.g. Purchase manager)"
+              placeholder={t("Role (e.g. Purchase manager)")}
               className="input-field text-sm"
             />
-            <input name="phone" placeholder="Phone (optional)" className="input-field text-sm" />
+            <input name="phone" placeholder={t("Phone (optional)")} className="input-field text-sm" />
           </div>
           <div className="flex gap-2">
             <button type="submit" disabled={pending} className="btn-primary text-xs px-3 py-1.5">
-              {pending ? "Adding…" : "Add contact"}
+              {pending ? t("Adding…") : t("Add contact")}
             </button>
             <button
               type="button"
@@ -99,7 +101,7 @@ export function CustomerContacts({
               disabled={pending}
               className="text-xs text-[var(--muted)] underline"
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </form>
@@ -109,7 +111,7 @@ export function CustomerContacts({
           onClick={() => setAdding(true)}
           className="text-xs text-[var(--teal)] font-medium inline-flex items-center gap-1"
         >
-          <Icon name="plus" size={12} /> Add a contact
+          <Icon name="plus" size={12} /> {t("Add a contact")}
         </button>
       )}
     </div>

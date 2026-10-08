@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { ZONES, type Zone } from "@/lib/utils";
+import { getT } from "@/lib/i18n";
 
 /**
  * Moves a state to a different zone on the reference/config table
@@ -15,11 +16,12 @@ import { ZONES, type Zone } from "@/lib/utils";
 export async function updateStateZone(stateId: string, zone: Zone) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
   if (session.role !== "owner") {
-    return { ok: false, message: "Only the owner can move states between zones." };
+    return { ok: false, message: t("Only the owner can move states between zones.") };
   }
   if (!ZONES.includes(zone)) {
-    return { ok: false, message: "Not a valid zone." };
+    return { ok: false, message: t("Not a valid zone.") };
   }
 
   const { error } = await supabaseAdmin.from("av_zone_states").update({ zone }).eq("id", stateId);

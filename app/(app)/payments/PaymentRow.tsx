@@ -5,6 +5,7 @@ import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
 import { formatCurrency, formatDate, isOverdue } from "@/lib/utils";
 import { recordPayment } from "./actions";
+import { useT } from "@/components/I18nProvider";
 
 export type DueOrder = {
   id: string;
@@ -19,6 +20,7 @@ export type DueOrder = {
 };
 
 export function PaymentRow({ order }: { order: DueOrder }) {
+  const t = useT();
   const [paid, setPaid] = useState(order.paid);
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState("");
@@ -33,11 +35,11 @@ export function PaymentRow({ order }: { order: DueOrder }) {
   function submit() {
     const value = Number(amount);
     if (!value || value <= 0) {
-      setError("Enter a valid amount");
+      setError(t("Enter a valid amount"));
       return;
     }
     if (value > due) {
-      setError(`Amount can't exceed the due amount (${formatCurrency(due)})`);
+      setError(t("Amount can't exceed the due amount ({amount})", { amount: formatCurrency(due) }));
       return;
     }
     setError(null);
@@ -57,13 +59,14 @@ export function PaymentRow({ order }: { order: DueOrder }) {
           <div className="font-medium text-[var(--ink)] truncate">{order.customerName}</div>
           <div className="text-sm text-[var(--muted)]">{order.product}</div>
           <div className="text-xs text-[var(--muted)] mt-0.5">
-            Ordered {formatDate(order.created_at)}
+            {t("Ordered {date}", { date: formatDate(order.created_at) })}
             {order.payment_due_date && (
               <>
                 {" · "}
                 <span className={overdue ? "text-red-600 font-medium" : ""}>
-                  Due {formatDate(order.payment_due_date)}
-                  {overdue ? " (overdue)" : ""}
+                  {overdue
+                    ? t("Due {date} (overdue)", { date: formatDate(order.payment_due_date) })
+                    : t("Due {date}", { date: formatDate(order.payment_due_date) })}
                 </span>
               </>
             )}
@@ -73,11 +76,11 @@ export function PaymentRow({ order }: { order: DueOrder }) {
           <div className="text-sm text-[var(--muted)]">{formatCurrency(order.amount)}</div>
           {settled ? (
             <div className="text-xs font-semibold text-[var(--teal)] flex items-center gap-1 justify-end mt-0.5">
-              <Icon name="check" size={12} /> Paid
+              <Icon name="check" size={12} /> {t("Paid")}
             </div>
           ) : (
             <div className={`text-sm font-semibold mt-0.5 ${overdue ? "text-red-600" : "text-[var(--ink)]"}`}>
-              Due {formatCurrency(due)}
+              {t("Due {amount}", { amount: formatCurrency(due) })}
             </div>
           )}
         </div>
@@ -91,7 +94,7 @@ export function PaymentRow({ order }: { order: DueOrder }) {
               onClick={() => setShowForm(true)}
               className="btn-secondary text-xs px-3 py-1.5"
             >
-              Record payment
+              {t("Record payment")}
             </button>
           ) : (
             <div className="space-y-2">
@@ -100,7 +103,7 @@ export function PaymentRow({ order }: { order: DueOrder }) {
                   type="number"
                   step="0.01"
                   className="input-field flex-1"
-                  placeholder={`Amount (max ${formatCurrency(due)})`}
+                  placeholder={t("Amount (max {amount})", { amount: formatCurrency(due) })}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />
@@ -110,12 +113,12 @@ export function PaymentRow({ order }: { order: DueOrder }) {
                   disabled={pending}
                   className="btn-primary text-xs px-4"
                 >
-                  {pending ? "Saving…" : "Save"}
+                  {pending ? t("Saving…") : t("Save")}
                 </button>
               </div>
               <input
                 className="input-field text-sm"
-                placeholder="Notes (optional)"
+                placeholder={t("Notes (optional)")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -128,7 +131,7 @@ export function PaymentRow({ order }: { order: DueOrder }) {
                 }}
                 className="text-xs text-[var(--muted)] underline"
               >
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           )}

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MOBILE_PRIMARY } from "./nav-config";
 import { Icon } from "./icon";
+import { useT } from "./I18nProvider";
 
 export function MobileNav() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-[var(--border)] pb-[env(safe-area-inset-bottom)]">
@@ -24,7 +26,7 @@ export function MobileNav() {
                 }`}
               >
                 <Icon name={item.icon} size={20} />
-                {item.label}
+                {t(item.label)}
               </Link>
             </li>
           );

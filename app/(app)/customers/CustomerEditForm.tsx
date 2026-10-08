@@ -6,6 +6,7 @@ import { Icon } from "@/components/icon";
 import { ZONE_LABEL, type Zone } from "@/lib/utils";
 import { ZoneStateSelect } from "@/components/ZoneStateSelect";
 import { updateEntry } from "../_shared/actions";
+import { useT } from "@/components/I18nProvider";
 
 export type EditableCustomer = {
   id: string;
@@ -24,6 +25,7 @@ export function CustomerEditForm({
   customer: EditableCustomer;
   statesByZone: Record<Zone, string[]>;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState({
     name: customer.name,
@@ -39,7 +41,7 @@ export function CustomerEditForm({
 
   function save() {
     if (!values.name.trim()) {
-      setError("Name is required");
+      setError(t("Name is required"));
       return;
     }
     setError(null);
@@ -69,7 +71,7 @@ export function CustomerEditForm({
         });
         setEditing(false);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Couldn't save changes");
+        setError(e instanceof Error ? t(e.message) : t("Couldn't save changes"));
       }
     });
   }
@@ -80,16 +82,16 @@ export function CustomerEditForm({
         <div className="flex items-start justify-between gap-2">
           <div className="text-sm space-y-1 flex-1 min-w-0">
             <div>
-              <span className="text-[var(--muted)]">Phone: </span>
+              <span className="text-[var(--muted)]">{t("Phone:")} </span>
               {saved.phone ?? "—"}
             </div>
             <div>
-              <span className="text-[var(--muted)]">Address: </span>
+              <span className="text-[var(--muted)]">{t("Address:")} </span>
               {saved.address ?? "—"}
             </div>
             <div>
-              <span className="text-[var(--muted)]">Zone: </span>
-              {saved.zone ? ZONE_LABEL[saved.zone as keyof typeof ZONE_LABEL] ?? saved.zone : "—"}
+              <span className="text-[var(--muted)]">{t("Zone:")} </span>
+              {saved.zone ? (ZONE_LABEL[saved.zone as keyof typeof ZONE_LABEL] ? t(ZONE_LABEL[saved.zone as keyof typeof ZONE_LABEL]) : saved.zone) : "—"}
               {saved.state && <span className="text-[var(--muted)]"> · {saved.state}</span>}
             </div>
           </div>
@@ -97,7 +99,7 @@ export function CustomerEditForm({
             type="button"
             onClick={() => setEditing(true)}
             className="text-[var(--muted)] hover:text-[var(--teal)] p-1 -m-1 shrink-0"
-            aria-label="Edit customer"
+            aria-label={t("Edit customer")}
           >
             <Icon name="edit" size={16} />
           </button>
@@ -110,7 +112,7 @@ export function CustomerEditForm({
     <Card className="mb-6">
       <div className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-[var(--ink)] mb-1">Name</label>
+          <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Name")}</label>
           <input
             className="input-field text-sm"
             value={values.name}
@@ -118,7 +120,7 @@ export function CustomerEditForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--ink)] mb-1">Phone</label>
+          <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Phone")}</label>
           <input
             className="input-field text-sm"
             value={values.phone}
@@ -126,7 +128,7 @@ export function CustomerEditForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--ink)] mb-1">Address</label>
+          <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Address")}</label>
           <input
             className="input-field text-sm"
             value={values.address}
@@ -134,7 +136,7 @@ export function CustomerEditForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--ink)] mb-1">Segment</label>
+          <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Segment")}</label>
           <input
             className="input-field text-sm"
             value={values.segment}
@@ -151,7 +153,7 @@ export function CustomerEditForm({
         {error && <div className="text-xs text-red-600">{error}</div>}
         <div className="flex gap-2">
           <button type="button" onClick={save} disabled={pending} className="btn-primary text-xs px-4 py-1.5">
-            {pending ? "Saving…" : "Save"}
+            {pending ? t("Saving…") : t("Save")}
           </button>
           <button
             type="button"
@@ -170,7 +172,7 @@ export function CustomerEditForm({
             disabled={pending}
             className="text-xs text-[var(--muted)] underline"
           >
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       </div>
