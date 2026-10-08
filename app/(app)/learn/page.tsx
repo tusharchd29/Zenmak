@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function LearnPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  const { lang, t, tx, txl } = await getT();
+  const { lang, t, tx } = await getT();
   const isOwner = session.role === "owner";
 
   const [progress, team] = await Promise.all([getProgress(session.userId), isOwner ? getTeamProgress() : Promise.resolve(null)]);

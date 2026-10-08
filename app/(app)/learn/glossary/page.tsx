@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function GlossaryPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  const { lang, t, tx, txl } = await getT();
+  const { lang, t, tx } = await getT();
 
   return (
     <div>

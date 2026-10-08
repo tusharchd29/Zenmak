@@ -21,7 +21,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const product = getProduct(slug);
   if (!product) notFound();
-  const { lang, t, tx, txl } = await getT();
+  const { lang, t, tx } = await getT();
 
   const items: ShareItem[] = productSheets(slug).map((s) => ({
     label:

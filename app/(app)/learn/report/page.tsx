@@ -110,7 +110,7 @@ function PersonDetail({ person, lang }: { person: PersonReport; lang: Lang }) {
 export default async function LearningReportPage({ searchParams }: { searchParams: Promise<{ user?: string }> }) {
   const session = await getSession();
   if (!session) redirect("/login");
-  const { lang, t, tx, txl } = await getT();
+  const { lang, t } = await getT();
   const isOwner = session.role === "owner";
   const { user } = await searchParams;
 

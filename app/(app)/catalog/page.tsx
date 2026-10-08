@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function CatalogPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  const { lang, t, tx, txl } = await getT();
+  const { lang, t, tx } = await getT();
 
   const items: BrowserItem[] = PRODUCTS.map((p) => ({
     slug: p.slug,
