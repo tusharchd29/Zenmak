@@ -6,9 +6,13 @@ import { NUTRITION } from "./products/nutrition";
 import { HERBAL_BIOSECURITY } from "./products/herbal-biosecurity";
 import { MEDICINES } from "./products/medicines";
 import SHEETS from "./sheets.json";
+import { TECHNICAL } from "./technical";
+import { FOUNDATIONS } from "./foundations";
+import { GLOSSARY, type Term } from "./glossary";
 
 export * from "./types";
-export { CATEGORIES, BROCHURES };
+export { CATEGORIES, BROCHURES, TECHNICAL, FOUNDATIONS, GLOSSARY };
+export type { Term };
 
 const categoryOrder = new Map(CATEGORIES.map((c, i) => [c.id, i]));
 
@@ -33,6 +37,39 @@ export function productsIn(category: CategoryId): Product[] {
 
 export function t(text: L, lang: Lang): string {
   return text[lang];
+}
+
+// --- Technical learning ------------------------------------------------------
+
+/** All English text of a product, for matching glossary terms. */
+function productText(p: Product): string {
+  return [
+    p.name,
+    p.tagline.en,
+    ...p.composition,
+    ...p.benefits.en,
+    ...p.dosage.en,
+    p.learn.problem.en,
+    p.learn.how.en,
+    p.learn.pitch.en,
+    p.learn.proof?.en ?? "",
+    ...(TECHNICAL[p.slug]?.en ?? []),
+    // Every medicine lesson should teach the withdrawal period.
+    p.rx ? "withdrawal" : "",
+  ].join(" \n ");
+}
+
+/** Glossary terms used in this product's lesson, in glossary order. */
+export function termsFor(p: Product, limit = 8): Term[] {
+  const text = productText(p);
+  return GLOSSARY.filter((term) =>
+    term.match.some((src) => {
+      // Acronym patterns (with \b and capitals) are case-sensitive; plain
+      // words match in any case.
+      const caseSensitive = /\\b/.test(src) && /[A-Z]{2}/.test(src);
+      return new RegExp(src, caseSensitive ? "" : "i").test(text);
+    }),
+  ).slice(0, limit);
 }
 
 export function formatPack(pack: Pack): string {
@@ -86,7 +123,8 @@ export function brochuresFor(slug: string) {
 }
 
 // --- Quiz ------------------------------------------------------------------
-// Questions are generated from the product data itself, so every answer is
+// Five questions (when to use, product group, dose, packs, composition) are
+// generated from the product data itself, so every answer is
 // right by construction and the quiz stays in sync when a product changes.
 // Shuffling is seeded by the product slug, so the server-rendered page and
 // the client agree on the option order.
@@ -180,9 +218,26 @@ export function quizFor(product: Product): QuizQuestion[] {
       packsText(product),
       distractors(packsText(product), others.map(packsText), 2, `${s}:packs`),
     ),
+    question(
+      `${s}:active`,
+      {
+        en: `Which of these is part of the composition of ${product.name}?`,
+        hi: `इनमें से कौन ${product.name} की संरचना (composition) का हिस्सा है?`,
+      },
+      keyActive(product),
+      distractors(keyActive(product), otherCategories.map(keyActive), 2, `${s}:active`),
+    ),
   ];
   return questions;
 }
 
-/** A lesson counts as passed at this many correct answers out of four. */
-export const PASS_MARK = 3;
+/** The first real ingredient line of a product's composition (skipping
+ * headers like "Each kg contains:"). Ingredient names are the same in both
+ * languages. */
+function keyActive(p: Product): L {
+  const line = p.composition.find((c) => !/:\s*$/.test(c) && !/^(each|minimum|composition)/i.test(c)) ?? p.composition[0];
+  return { en: line, hi: line };
+}
+
+/** A lesson counts as passed at this many correct answers out of five. */
+export const PASS_MARK = 4;

@@ -51,6 +51,19 @@ export default async function LearnPage() {
         <ProgressBar pct={(passedTotal / PRODUCTS.length) * 100} />
       </Card>
 
+      <Link href="/learn/glossary" className="block mb-5">
+        <Card className="flex items-center gap-3 hover:border-[var(--seafoam)] transition-colors">
+          <div className="w-9 h-9 rounded-lg bg-[var(--saffron)]/15 text-[var(--saffron)] flex items-center justify-center shrink-0">
+            <Icon name="book-open" size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-[var(--ink)]">{ui("glossary", lang)}</div>
+            <div className="text-sm text-[var(--muted)] leading-snug">{ui("glossarySub", lang)}</div>
+          </div>
+          <Icon name="chevron-right" size={16} className="text-[var(--muted)] shrink-0" />
+        </Card>
+      </Link>
+
       <div className="grid gap-2 sm:grid-cols-2">
         {CATEGORIES.map((c) => {
           const lessons = productsIn(c.id);

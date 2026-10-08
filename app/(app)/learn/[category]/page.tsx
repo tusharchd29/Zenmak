@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getLang, ui } from "@/lib/i18n";
-import { CATEGORIES, productsIn, type CategoryId } from "@/lib/catalog";
+import { CATEGORIES, FOUNDATIONS, productsIn, type CategoryId } from "@/lib/catalog";
 import { getProgress } from "@/lib/learning";
 import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
@@ -40,6 +40,21 @@ export default async function CoursePage({ params }: { params: Promise<{ categor
       <Card className="mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--teal)] mb-1.5">{ui("courseIntro", lang)}</h2>
         <p className="text-[var(--ink)] leading-relaxed">{category.intro[lang]}</p>
+      </Card>
+
+      <Card className="mb-4">
+        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[var(--teal)] mb-2">
+          <Icon name="graduation-cap" size={16} />
+          {ui("foundations", lang)}
+        </h2>
+        <ul className="space-y-2">
+          {FOUNDATIONS[category.id as CategoryId][lang].map((point) => (
+            <li key={point} className="flex gap-2 text-[var(--ink)] leading-snug">
+              <Icon name="lightbulb" size={16} className="text-[var(--saffron)] mt-0.5 shrink-0" />
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
       </Card>
 
       <div className="space-y-2">
