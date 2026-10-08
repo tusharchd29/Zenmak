@@ -49,8 +49,16 @@ export async function deleteContact(contactId: string, customerId: string) {
     return { ok: false, message: "Customer not found" };
   }
 
-  const { error } = await supabaseAdmin.from("av_customer_contacts").delete().eq("id", contactId);
+  // Scope to the customer just checked — otherwise any contact id could be
+  // deleted by passing a customer the rep does own.
+  const { data: deleted, error } = await supabaseAdmin
+    .from("av_customer_contacts")
+    .delete()
+    .eq("id", contactId)
+    .eq("customer_id", customerId)
+    .select("id");
   if (error) return { ok: false, message: error.message };
+  if (!deleted || deleted.length === 0) return { ok: false, message: "Contact not found" };
 
   revalidatePath(`/customers/${customerId}`);
   return { ok: true };

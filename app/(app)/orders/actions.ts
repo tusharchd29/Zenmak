@@ -232,8 +232,17 @@ export async function advanceOrderStatus(orderId: string, currentStatus: OrderSt
     update.fulfilled_at = now;
   }
 
-  const { error } = await supabaseAdmin.from("av_orders").update(update).eq("id", orderId);
+  // Only move the order if it's really at currentStatus right now — the
+  // status comes from the browser, so it could be stale (two tabs, a double
+  // tap) or forged (jumping a pending order straight to fulfilled).
+  const { data: moved, error } = await supabaseAdmin
+    .from("av_orders")
+    .update(update)
+    .eq("id", orderId)
+    .eq("status", currentStatus)
+    .select("id");
   if (error) throw new Error(error.message);
+  if (!moved || moved.length === 0) throw new Error("This order was just updated — refresh to see its current status.");
 
   revalidatePath("/orders");
   revalidatePath("/dashboard");
@@ -276,8 +285,15 @@ export async function revertOrderStatus(orderId: string, currentStatus: OrderSta
     update.fulfilled_by = null;
   }
 
-  const { error } = await supabaseAdmin.from("av_orders").update(update).eq("id", orderId);
+  // Same stale/forged-status guard as advanceOrderStatus.
+  const { data: moved, error } = await supabaseAdmin
+    .from("av_orders")
+    .update(update)
+    .eq("id", orderId)
+    .eq("status", currentStatus)
+    .select("id");
   if (error) return { ok: false, message: error.message };
+  if (!moved || moved.length === 0) return { ok: false, message: "This order was just updated — refresh to see its current status." };
 
   revalidatePath("/orders");
   revalidatePath("/dashboard");

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { canViewCustomer } from "@/lib/access";
 
 export async function createTourPlan(formData: FormData) {
   const session = await getSession();
@@ -61,6 +62,10 @@ export async function createTourStop(formData: FormData) {
   if (!(await canActOnTour(session, tour_id))) {
     return { ok: false, message: "Tour plan not found" };
   }
+  // A rep can only plan stops at their own customers.
+  if (customer_id && !(await canViewCustomer(session, customer_id))) {
+    return { ok: false, message: "Customer not found" };
+  }
 
   // New stop goes to the end of that day's list.
   const { data: existing } = await supabaseAdmin
@@ -96,6 +101,7 @@ export async function reorderTourStop(
     .from("av_tour_stops")
     .select("id, planned_date, sort_order")
     .eq("id", stopId)
+    .eq("tour_id", tourId)
     .maybeSingle();
   if (!stop) return { ok: false, message: "Stop not found" };
 
@@ -113,8 +119,8 @@ export async function reorderTourStop(
   const a = list[idx];
   const b = list[swapIdx];
   const [{ error: e1 }, { error: e2 }] = await Promise.all([
-    supabaseAdmin.from("av_tour_stops").update({ sort_order: b.sort_order }).eq("id", a.id),
-    supabaseAdmin.from("av_tour_stops").update({ sort_order: a.sort_order }).eq("id", b.id),
+    supabaseAdmin.from("av_tour_stops").update({ sort_order: b.sort_order }).eq("id", a.id).eq("tour_id", tourId),
+    supabaseAdmin.from("av_tour_stops").update({ sort_order: a.sort_order }).eq("id", b.id).eq("tour_id", tourId),
   ]);
   if (e1 || e2) return { ok: false, message: (e1 || e2)?.message };
 
@@ -127,11 +133,16 @@ export async function toggleTourStop(stopId: string, tourId: string, completed: 
   if (!session) redirect("/login");
   if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Not found" };
 
-  const { error } = await supabaseAdmin
+  // Scoped to the tour just checked, so a stop id from someone else's tour
+  // can't be changed by passing your own tour id.
+  const { data: changed, error } = await supabaseAdmin
     .from("av_tour_stops")
     .update({ completed, completed_at: completed ? new Date().toISOString() : null })
-    .eq("id", stopId);
+    .eq("id", stopId)
+    .eq("tour_id", tourId)
+    .select("id");
   if (error) return { ok: false, message: error.message };
+  if (!changed || changed.length === 0) return { ok: false, message: "Stop not found" };
 
   revalidatePath("/tours");
   return { ok: true };
@@ -154,8 +165,14 @@ export async function deleteTourStop(stopId: string, tourId: string) {
   if (!session) redirect("/login");
   if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Not found" };
 
-  const { error } = await supabaseAdmin.from("av_tour_stops").delete().eq("id", stopId);
+  const { data: deleted, error } = await supabaseAdmin
+    .from("av_tour_stops")
+    .delete()
+    .eq("id", stopId)
+    .eq("tour_id", tourId)
+    .select("id");
   if (error) return { ok: false, message: error.message };
+  if (!deleted || deleted.length === 0) return { ok: false, message: "Stop not found" };
 
   revalidatePath("/tours");
   return { ok: true };

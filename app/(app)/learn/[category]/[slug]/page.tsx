@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getLang, ui } from "@/lib/i18n";
-import { getCategory, getProduct, productsIn, quizFor } from "@/lib/catalog";
+import { getCategory, getProduct, productsIn, quizFor, termsFor, TECHNICAL } from "@/lib/catalog";
 import { getProgress } from "@/lib/learning";
 import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
@@ -37,6 +37,9 @@ export default async function LessonPage({ params }: { params: Promise<{ categor
 
   const siblings = productsIn(product.category);
   const next = siblings[siblings.findIndex((p) => p.slug === slug) + 1];
+
+  const technical = TECHNICAL[slug];
+  const terms = termsFor(product);
 
   // Questions go to the browser without the answer key — the server grades.
   const questions = quizFor(product).map((q) => ({ id: q.id, q: q.q[lang], options: q.options.map((o) => o[lang]) }));
@@ -79,6 +82,44 @@ export default async function LessonPage({ params }: { params: Promise<{ categor
           </ul>
         </Block>
 
+        {technical && (
+          <Block icon="graduation-cap" title={ui("technical", lang)}>
+            <p className="text-xs text-[var(--muted)] -mt-1 mb-2">{ui("technicalSub", lang)}</p>
+            <ol className="space-y-2">
+              {technical[lang].map((point, i) => (
+                <li key={point} className="flex gap-2.5 text-[var(--ink)] leading-snug">
+                  <span className="w-5 h-5 rounded-full bg-[var(--teal)] text-white text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ol>
+          </Block>
+        )}
+
+        {terms.length > 0 && (
+          <Block icon="book-open" title={ui("terms", lang)}>
+            <div className="divide-y divide-[var(--border)]">
+              {terms.map((term) => (
+                <details key={term.id} className="group py-2">
+                  <summary className="flex items-center justify-between gap-2 cursor-pointer list-none font-medium text-[var(--ink)]">
+                    {term.term}
+                    <Icon name="chevron-down" size={16} className="text-[var(--muted)] transition-transform group-open:rotate-180 shrink-0" />
+                  </summary>
+                  <p className="text-sm text-[var(--ink)] mt-1.5 leading-relaxed">{term.meaning[lang]}</p>
+                  <p className="text-sm mt-1.5 text-[var(--teal)]">
+                    <span className="font-semibold">{ui("sayIt", lang)}:</span> &ldquo;{term.say[lang]}&rdquo;
+                  </p>
+                </details>
+              ))}
+            </div>
+            <Link href="/learn/glossary" className="inline-block text-sm text-[var(--teal)] font-medium mt-2 hover:underline">
+              {ui("glossary", lang)} →
+            </Link>
+          </Block>
+        )}
+
         <Block icon="message-circle" title={ui("pitch", lang)} tone="pitch">
           <p className="text-[var(--ink)] text-lg leading-snug font-medium">&ldquo;{product.learn.pitch[lang]}&rdquo;</p>
         </Block>
@@ -119,6 +160,7 @@ export default async function LessonPage({ params }: { params: Promise<{ categor
             labels={{
               submit: ui("submit", lang),
               retry: ui("retry", lang),
+              retake: ui("retake", lang),
               passed: ui("passed", lang),
               notPassed: ui("notPassed", lang),
               score: ui("score", lang),

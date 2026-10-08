@@ -8,7 +8,7 @@ import { submitQuiz, type QuizResult } from "@/app/(app)/learn/actions";
 
 export type QuizView = { id: string; q: string; options: string[] };
 
-type Labels = { submit: string; retry: string; passed: string; notPassed: string; score: string };
+type Labels = { submit: string; retry: string; retake: string; passed: string; notPassed: string; score: string };
 
 export function Quiz({ slug, questions, labels }: { slug: string; questions: QuizView[]; labels: Labels }) {
   const [answers, setAnswers] = useState<(number | null)[]>(() => questions.map(() => null));
@@ -89,18 +89,16 @@ export function Quiz({ slug, questions, labels }: { slug: string; questions: Qui
             {labels.score}: {result.score} / {result.total}
           </div>
           {result.saved === false && <div className="text-xs mt-1 opacity-80">(Progress isn&apos;t being saved yet.)</div>}
-          {!result.passed && (
-            <button
-              type="button"
-              onClick={() => {
-                setResult(null);
-                setAnswers(questions.map(() => null));
-              }}
-              className="btn-secondary text-sm px-3 py-1.5 mt-2"
-            >
-              {labels.retry}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              setResult(null);
+              setAnswers(questions.map(() => null));
+            }}
+            className="btn-secondary text-sm px-3 py-1.5 mt-2"
+          >
+            {result.passed ? labels.retake : labels.retry}
+          </button>
         </div>
       ) : (
         <button type="button" onClick={submit} disabled={!allAnswered || pending} className="btn-primary w-full py-2.5">

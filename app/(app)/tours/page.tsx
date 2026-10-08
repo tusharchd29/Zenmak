@@ -13,7 +13,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { TourStops, type Stop } from "./TourStops";
 import { TourPlanZoneFields } from "./TourPlanZoneFields";
 import { TourStatesEditor } from "./TourStatesEditor";
-import { MapView } from "../map/MapView";
+import { MapView } from "../map/MapViewLazy";
 import { ShareTourButton } from "./ShareTourButton";
 
 export const dynamic = "force-dynamic";

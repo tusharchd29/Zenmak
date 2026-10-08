@@ -18,7 +18,7 @@ import { formatCurrency, formatDate, ZONE_LABEL, type Zone } from "@/lib/utils";
 import { parseDateRange } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
 import { redirect } from "next/navigation";
-import { MapView } from "../map/MapView";
+import { MapView } from "../map/MapViewLazy";
 import { PeacockFeather } from "@/components/PeacockFeather";
 
 export const dynamic = "force-dynamic";
