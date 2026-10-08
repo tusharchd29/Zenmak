@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
 import { REPORT_SECTIONS, REPORT_SECTION_LABEL } from "@/lib/reports";
+import { SHEETS } from "@/lib/report-csv";
 import { monthStartIST, todayIST } from "@/lib/date-range";
 
 export const dynamic = "force-dynamic";
@@ -109,6 +110,31 @@ export default async function ReportsPage() {
             <Icon name="bar-chart-3" size={16} />
             Download PDF report
           </button>
+
+          <div className="border-t border-[var(--border)] pt-4">
+            <label className="block text-sm font-medium text-[var(--ink)] mb-1.5">
+              Or download one sheet for Excel / Google Sheets (same dates{isOwner ? " and people" : ""})
+            </label>
+            <div className="flex gap-2">
+              <select name="sheet" defaultValue="orders" className="input-field flex-1">
+                {Object.entries(SHEETS).map(([key, sheet]) => (
+                  <option key={key} value={key}>
+                    {sheet.label}
+                  </option>
+                ))}
+              </select>
+              {/* Same form, different endpoint: formAction sends the dates and
+                  rep filters to the CSV route instead of the PDF one. */}
+              <button
+                type="submit"
+                formAction="/api/reports/csv"
+                className="btn-secondary px-4 py-2 inline-flex items-center gap-2 whitespace-nowrap"
+              >
+                <Icon name="download" size={16} />
+                Excel
+              </button>
+            </div>
+          </div>
         </form>
       </Card>
     </div>

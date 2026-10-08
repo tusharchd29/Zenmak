@@ -1,5 +1,6 @@
 import { dayStart, dayEnd, todayIST } from "./date-range";
 import { fetchAll, sumPayments } from "./fetch-all";
+import { PRODUCTS, getProduct } from "./catalog";
 import { supabaseAdmin } from "./supabase-admin";
 import { getRepScope } from "./data";
 import { getEffectiveTargets } from "./targets";
@@ -17,6 +18,7 @@ export const REPORT_SECTIONS = [
   "advances",
   "targets",
   "tours",
+  "learning",
 ] as const;
 export type ReportSection = (typeof REPORT_SECTIONS)[number];
 
@@ -28,6 +30,7 @@ export const REPORT_SECTION_LABEL: Record<ReportSection, string> = {
   advances: "Advances & claims",
   targets: "Targets vs achievement",
   tours: "Tour coverage",
+  learning: "Learning & tests",
 };
 
 export type ReportCustomer = {
@@ -139,6 +142,30 @@ export type ReportTour = {
   stops: ReportTourStop[];
 };
 
+export type ReportLearningRow = {
+  repId: string;
+  repName: string;
+  /** Lessons passed at any time, out of totalLessons. */
+  passedAllTime: number;
+  totalLessons: number;
+  /** Tests taken (attempts, retakes included) inside the report's dates. */
+  testsInPeriod: number;
+  /** Distinct lessons passed inside the report's dates. */
+  passedInPeriod: number;
+  /** Average score of tests taken in the period, as a percentage. */
+  avgPctInPeriod: number | null;
+  lastActivity: string | null;
+};
+
+export type ReportLearningAttempt = {
+  at: string;
+  repName: string;
+  lesson: string;
+  score: number;
+  total: number;
+  passed: boolean;
+};
+
 export type ReportData = {
   start: string;
   end: string;
@@ -154,6 +181,8 @@ export type ReportData = {
   travelLogs: ReportTravelLog[];
   targets: ReportTargetRow[];
   tours: ReportTour[];
+  learning: ReportLearningRow[];
+  learningAttempts: ReportLearningAttempt[];
   totals: {
     fulfilledValue: number;
     collected: number;
@@ -439,13 +468,79 @@ export async function getReportData(
   const targetRepIds = repIds ?? Array.from(userName.keys());
   const monthDate = `${start.slice(0, 7)}-01`;
   const effectiveTargets = want("targets") ? await getEffectiveTargets(targetRepIds, monthDate) : new Map();
+  // Achievement = orders FULFILLED inside the report's dates (fulfilled_at),
+  // not orders created then — an order created last month and fulfilled
+  // in this window counts here.
   const fulfilledByRep = new Map<string, number>();
-  for (const o of orders) {
-    if (o.status !== "fulfilled") continue;
-    const repEntry = orderRows.find((r) => r.id === o.id);
-    const repId = repEntry?.rep_id;
-    if (!repId) continue;
-    fulfilledByRep.set(repId, (fulfilledByRep.get(repId) ?? 0) + (o.amount ?? 0));
+  if (want("targets")) {
+    const { data: fulfilledRows } = await fetchAll((from, to) => {
+      let q = supabaseAdmin
+        .from("av_orders")
+        .select("id, rep_id, amount")
+        .eq("status", "fulfilled")
+        .gte("fulfilled_at", dayStart(start))
+        .lte("fulfilled_at", dayEnd(end))
+        .order("id");
+      if (repIds) q = q.in("rep_id", repIds);
+      return q.range(from, to);
+    });
+    for (const o of fulfilledRows) {
+      fulfilledByRep.set(o.rep_id, (fulfilledByRep.get(o.rep_id) ?? 0) + (o.amount ?? 0));
+    }
+  }
+
+  // Learning & tests — per person in scope: lessons passed overall, and
+  // tests taken / passed / average score inside the report's dates.
+  const learning: ReportLearningRow[] = [];
+  const learningAttempts: ReportLearningAttempt[] = [];
+  if (want("learning")) {
+    let peopleQuery = supabaseAdmin.from("av_users").select("id, name").eq("active", true).order("name");
+    if (repIds) peopleQuery = peopleQuery.in("id", repIds);
+    const [{ data: people }, { data: attemptRows }, { data: progressRows }] = await Promise.all([
+      peopleQuery,
+      fetchAll((from, to) => {
+        let q = supabaseAdmin
+          .from("av_learning_attempts")
+          .select("user_id, product_slug, score, total, passed, created_at")
+          .gte("created_at", dayStart(start))
+          .lte("created_at", dayEnd(end))
+          .order("created_at", { ascending: true })
+          .order("id");
+        if (repIds) q = q.in("user_id", repIds);
+        return q.range(from, to);
+      }),
+      fetchAll((from, to) => {
+        let q = supabaseAdmin.from("av_learning_progress").select("user_id, passed, updated_at").eq("passed", true).order("id");
+        if (repIds) q = q.in("user_id", repIds);
+        return q.range(from, to);
+      }),
+    ]);
+    for (const p of people ?? []) {
+      const mine = attemptRows.filter((a) => a.user_id === p.id);
+      const pct = mine.map((a) => a.score / a.total);
+      const lastInPeriod = mine.length ? mine[mine.length - 1].created_at : null;
+      learning.push({
+        repId: p.id,
+        repName: p.name,
+        passedAllTime: progressRows.filter((r) => r.user_id === p.id).length,
+        totalLessons: PRODUCTS.length,
+        testsInPeriod: mine.length,
+        passedInPeriod: new Set(mine.filter((a) => a.passed).map((a) => a.product_slug)).size,
+        avgPctInPeriod: pct.length ? Math.round((pct.reduce((x, y) => x + y, 0) / pct.length) * 100) : null,
+        lastActivity: lastInPeriod,
+      });
+    }
+    learning.sort((a, b) => b.passedAllTime - a.passedAllTime || a.repName.localeCompare(b.repName));
+    for (const a of attemptRows) {
+      learningAttempts.push({
+        at: a.created_at,
+        repName: userName.get(a.user_id) ?? "—",
+        lesson: getProduct(a.product_slug)?.name ?? a.product_slug,
+        score: a.score,
+        total: a.total,
+        passed: a.passed,
+      });
+    }
   }
   const targets: ReportTargetRow[] = targetRepIds
     .map((repId) => {
@@ -498,6 +593,8 @@ export async function getReportData(
     travelLogs,
     targets,
     tours,
+    learning,
+    learningAttempts,
     totals: {
       fulfilledValue,
       collected,
