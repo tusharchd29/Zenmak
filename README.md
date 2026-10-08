@@ -37,3 +37,18 @@ a role (`owner` or `rep`). Update PINs before rolling out to the real team.
 ## Live deployment
 
 https://allvet.vercel.app
+
+## Product Master, Learning & brochures
+
+- `lib/catalog/` — the product master: all 56 brochure products with
+  composition, dosage, packs and bilingual (English/Hindi) benefits and
+  training notes. Quizzes are generated from this data (`quizFor`).
+- `/catalog` (Product Master), `/learn` (lessons + quizzes), `/brochures`
+  (full brochures + custom multi-product PDF), and the public, no-login
+  `/p/<slug>` product page customers open from WhatsApp.
+- PDFs live in `public/docs/` and are public (excluded from the login
+  redirect in `proxy.ts`). They're generated from the source brochures by
+  `python3 scripts/split-brochures.py <dir>` using the page map in
+  `lib/catalog/sheets.json` — re-run it when a brochure changes.
+- Learning progress needs the `av_learning_progress` table:
+  run `supabase/migrations/20261008_av_learning_progress.sql` once.
