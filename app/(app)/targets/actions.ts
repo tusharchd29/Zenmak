@@ -4,17 +4,18 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { parsePositive } from "@/lib/validate";
 
 export async function setTarget(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "owner") redirect("/dashboard");
 
   const rep_id = String(formData.get("rep_id") || "");
-  const target_amount = Number(formData.get("target_amount") || 0);
+  const target_amount = parsePositive(formData.get("target_amount"));
   const period_month = String(formData.get("period_month") || "");
 
-  if (!rep_id || !period_month || target_amount <= 0) {
-    return { ok: false, message: "All fields are required" };
+  if (!rep_id || !/^\d{4}-\d{2}$/.test(period_month) || target_amount === null) {
+    return { ok: false, message: "Pick a rep, a month and a target above zero" };
   }
 
   const { error } = await supabaseAdmin

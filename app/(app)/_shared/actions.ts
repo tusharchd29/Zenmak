@@ -78,6 +78,13 @@ export async function updateEntry(
   if (extra.length > 0) throw new Error(`These fields can't be edited here: ${extra.join(", ")}`);
   if (Object.keys(data).length === 0) throw new Error("Nothing to save.");
 
+  // No NaN/Infinity in any numeric field (they'd be stored and poison sums),
+  // and no negative prices or pack sizes.
+  for (const [k, v] of Object.entries(data)) {
+    if (typeof v === "number" && !Number.isFinite(v)) throw new Error(`${k} must be a number.`);
+    if ((k === "default_price" || k === "pack_size") && typeof v === "number" && v < 0) throw new Error(`${k} can't be negative.`);
+  }
+
   // Same floor the dedicated create actions enforce (e.g. createExpense,
   // createAdvance) — the generic inline-edit widget shares these fields but
   // previously skipped this check entirely.
