@@ -24,7 +24,7 @@ export default async function LearnPage() {
 
   return (
     <div>
-      <PageHeader title={t("Learning")} subtitle={t("Short lessons on every product, in English and Hindi")} action={<LangToggle lang={lang} />} />
+      <PageHeader title={t("Learning")} subtitle={t("Short lessons on every product, in your language")} action={<LangToggle lang={lang} />} />
 
       {isOwner && !progress.available && (
         <Card className="mb-4 border-amber-300 bg-amber-50">

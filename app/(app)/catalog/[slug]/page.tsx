@@ -64,7 +64,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ShareSheet
               items={items}
               brochures={brochures}
-              publicPath={`/p/${slug}${t("")}`}
+              publicPath={`/p/${slug}${lang === "en" ? "" : `?lang=${lang}`}`}
               messagePrefix={`Zenmak ${product.name} —`}
               labels={{
                 sharePdf: t("Share PDF"),
