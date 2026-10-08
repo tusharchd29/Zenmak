@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { PRODUCTS, formatPack, getCategory } from "@/lib/catalog";
+import { getT } from "@/lib/i18n";
 
 /** The order-catalog name for one pack of a product, e.g.
  * "Hygin-Tact 20 (5 L)" or "Natumeric Plus (20 kg Powder)". */
@@ -21,6 +22,7 @@ function variantName(name: string, pack: (typeof PRODUCTS)[number]["packs"][numb
 export async function syncCatalogToProducts() {
   const session = await getSession();
   if (!session || session.role !== "owner") redirect("/catalog");
+  const { t } = await getT();
 
   const { data: existing, error: readError } = await supabaseAdmin.from("av_products").select("name");
   if (readError) return { ok: false, message: readError.message };
@@ -36,7 +38,7 @@ export async function syncCatalogToProducts() {
     })),
   ).filter((r) => !have.has(r.name.toLowerCase()));
 
-  if (rows.length === 0) return { ok: true, message: "Already up to date — every product and pack is in the order list." };
+  if (rows.length === 0) return { ok: true, message: t("Already up to date — every product and pack is in the order list.") };
 
   const { error } = await supabaseAdmin.from("av_products").insert(rows);
   if (error) return { ok: false, message: error.message };
@@ -44,5 +46,5 @@ export async function syncCatalogToProducts() {
   revalidatePath("/products");
   revalidatePath("/orders/new");
   revalidatePath("/catalog");
-  return { ok: true, message: `Added ${rows.length} product packs to the order list. Set their prices on the Products page.` };
+  return { ok: true, message: t("Added {n} product packs to the order list. Set their prices on the Products page.", { n: rows.length }) };
 }

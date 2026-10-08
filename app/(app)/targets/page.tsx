@@ -11,6 +11,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { getEffectiveTargets } from "@/lib/targets";
 import { dayStart, monthStartIST, nextMonthStart } from "@/lib/date-range";
 import { fetchAll } from "@/lib/fetch-all";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
 export default async function TargetsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   // This month in India time (the server runs in UTC).
   const monthStartDate = monthStartIST();
@@ -71,8 +73,8 @@ export default async function TargetsPage() {
   return (
     <div>
       <PageHeader
-        title="Targets"
-        subtitle="Counts only orders marked Fulfilled — not just placed"
+        title={t("Targets")}
+        subtitle={t("Counts only orders marked Fulfilled — not just placed")}
       />
 
       <div className="space-y-3 mb-6">
@@ -92,7 +94,7 @@ export default async function TargetsPage() {
               <ProgressBar pct={pct} />
               {carriedOver && (
                 <div className="text-xs text-[var(--muted)] mt-1.5">
-                  Carried over — last set {target.setFor.slice(0, 7)}
+                  {t("Carried over — last set {month}", { month: target.setFor.slice(0, 7) })}
                 </div>
               )}
             </Card>
@@ -100,22 +102,22 @@ export default async function TargetsPage() {
         })}
         {repsWithTargets.length === 0 && (
           <div className="text-sm text-[var(--muted)]">
-            No target has ever been set{session.role === "owner" ? "" : " for you"} yet.
+            {session.role === "owner" ? t("No target has ever been set yet.") : t("No target has ever been set for you yet.")}
           </div>
         )}
       </div>
 
       {session.role === "owner" && (
         <Card>
-          <div className="font-medium text-[var(--ink)] mb-3">Set a target</div>
+          <div className="font-medium text-[var(--ink)] mb-3">{t("Set a target")}</div>
           <ActionForm action={setTarget} resetOnSuccess className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Rep
+                {t("Rep")}
               </label>
               <select name="rep_id" required className="input-field" defaultValue="">
                 <option value="" disabled>
-                  Select a rep
+                  {t("Select a rep")}
                 </option>
                 {reps.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -127,7 +129,7 @@ export default async function TargetsPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                  Month
+                  {t("Month")}
                 </label>
                 <input
                   type="month"
@@ -139,7 +141,7 @@ export default async function TargetsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                  Target (₹)
+                  {t("Target (₹)")}
                 </label>
                 <input
                   type="number"
@@ -150,7 +152,7 @@ export default async function TargetsPage() {
                 />
               </div>
             </div>
-            <SubmitButton>Save target</SubmitButton>
+            <SubmitButton>{t("Save target")}</SubmitButton>
           </ActionForm>
         </Card>
       )}

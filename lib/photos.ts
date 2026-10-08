@@ -1,3 +1,4 @@
+import { msg } from "@/lib/i18n-shared";
 import { supabaseAdmin } from "./supabase-admin";
 
 export type PhotoEntityType = "visit" | "expense" | "travel_log";
@@ -30,11 +31,11 @@ export async function attachPhotoIfPresent(
   if (!(file instanceof File) || file.size === 0) return;
 
   if (file.size > MAX_BYTES) {
-    throw new Error("Photo is too large — the limit is 10 MB.");
+    throw new Error(msg("Photo is too large — the limit is 10 MB."));
   }
   const ext = ALLOWED_TYPES[file.type];
   if (!ext) {
-    throw new Error("Photo must be a JPEG, PNG, WEBP, or HEIC image.");
+    throw new Error(msg("Photo must be a JPEG, PNG, WEBP, or HEIC image."));
   }
 
   const path = `${entityType}/${entityId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;

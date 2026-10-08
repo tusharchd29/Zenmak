@@ -5,6 +5,7 @@ import { Icon } from "@/components/icon";
 import type { Zone } from "@/lib/utils";
 import { TourStatesPicker } from "./TourStatesPicker";
 import { updateTourStates } from "./actions";
+import { useT } from "@/components/I18nProvider";
 
 /** Shows which states of the tour's zone this trip covers, with a small
  * inline editor to change the selection — mirrors TourStops' pattern of a
@@ -21,6 +22,7 @@ export function TourStatesEditor({
   states: string[];
   statesByZone: Record<Zone, string[]>;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState(states);
   const [pending, startTransition] = useTransition();
@@ -35,7 +37,7 @@ export function TourStatesEditor({
     startTransition(async () => {
       const result = await updateTourStates(tourId, selected);
       if (!result.ok) {
-        setError(result.message || "Couldn't save.");
+        setError(result.message || t("Couldn't save."));
         return;
       }
       setEditing(false);
@@ -50,8 +52,8 @@ export function TourStatesEditor({
       >
         <span>
           {states.length === 0 || states.length === zoneStates.length
-            ? "All states in this zone"
-            : `States: ${states.join(", ")}`}
+            ? t("All states in this zone")
+            : t("States: {states}", { states: states.join(", ") })}
         </span>
         <button
           type="button"
@@ -60,7 +62,7 @@ export function TourStatesEditor({
             setEditing(true);
           }}
           className="text-[var(--muted)] hover:text-[var(--teal)] p-0.5 -m-0.5 shrink-0"
-          aria-label="Edit states covered"
+          aria-label={t("Edit states covered")}
         >
           <Icon name="edit" size={13} />
         </button>
@@ -74,7 +76,7 @@ export function TourStatesEditor({
       {error && <div className="text-xs text-red-600 mt-1.5">{error}</div>}
       <div className="flex gap-2 mt-2">
         <button type="button" onClick={save} disabled={pending} className="btn-primary text-xs px-3 py-1.5">
-          {pending ? "Saving…" : "Save"}
+          {pending ? t("Saving…") : t("Save")}
         </button>
         <button
           type="button"
@@ -85,7 +87,7 @@ export function TourStatesEditor({
           disabled={pending}
           className="text-xs text-[var(--muted)] underline"
         >
-          Cancel
+          {t("Cancel")}
         </button>
       </div>
     </div>

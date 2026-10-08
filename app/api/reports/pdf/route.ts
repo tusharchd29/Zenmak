@@ -2,6 +2,7 @@ import { createElement, type ReactElement } from "react";
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { getSession } from "@/lib/session";
+import { getT } from "@/lib/i18n";
 import { getReportData, REPORT_SECTIONS, type ReportSection } from "@/lib/reports";
 import { ReportDocument } from "@/lib/report-pdf";
 
@@ -19,22 +20,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  const { t } = await getT();
   const { searchParams } = new URL(request.url);
   const start = searchParams.get("start") ?? "";
   const end = searchParams.get("end") ?? "";
 
   if (!isValidDate(start) || !isValidDate(end)) {
-    return NextResponse.json({ error: "Start and end date are required (YYYY-MM-DD)." }, { status: 400 });
+    return NextResponse.json({ error: t("Start and end date are required (YYYY-MM-DD).") }, { status: 400 });
   }
   if (start > end) {
-    return NextResponse.json({ error: "Start date must be on or before the end date." }, { status: 400 });
+    return NextResponse.json({ error: t("Start date must be on or before the end date.") }, { status: 400 });
   }
 
   // Cap the range so a very wide, unbounded query can't be used to pull the
   // whole database's history in one request.
   const spanDays = (new Date(end).getTime() - new Date(start).getTime()) / 86_400_000;
   if (spanDays > 366) {
-    return NextResponse.json({ error: "Date range can't be longer than a year." }, { status: 400 });
+    return NextResponse.json({ error: t("Date range can't be longer than a year.") }, { status: 400 });
   }
 
   // Owner only: which reps' data to include (repeated ?rep=<id> params;

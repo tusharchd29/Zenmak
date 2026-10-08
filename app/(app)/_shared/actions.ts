@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
+import { getT } from "@/lib/i18n";
+import { msg } from "@/lib/i18n-shared";
 
 // Tables editable through the generic inline-edit widget. Anything not
 // listed here is refused, even if the caller somehow supplies its name.
@@ -37,7 +39,7 @@ const EDITABLE_TABLES = new Set([
   ...SHARED_EDITABLE_TABLES,
 ]);
 
-const NOT_ALLOWED_MESSAGE = "Record not found, or you don't have permission to change it.";
+const NOT_ALLOWED_MESSAGE = msg("Record not found, or you don't have permission to change it.");
 
 // The only columns the inline-edit forms change, per table. Anything else in
 // `data` is refused: the payload comes from the browser, so without this a
@@ -67,34 +69,35 @@ export async function updateEntry(
 ) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   if (!EDITABLE_TABLES.has(table)) {
-    throw new Error("This record type can't be edited.");
+    throw new Error(t("This record type can't be edited."));
   }
-  if (!id) throw new Error("Missing record id");
+  if (!id) throw new Error(t("Missing record id"));
 
   const allowed = new Set(EDITABLE_COLUMNS[table] ?? []);
   const extra = Object.keys(data).filter((k) => !allowed.has(k));
-  if (extra.length > 0) throw new Error(`These fields can't be edited here: ${extra.join(", ")}`);
-  if (Object.keys(data).length === 0) throw new Error("Nothing to save.");
+  if (extra.length > 0) throw new Error(t("These fields can't be edited here: {fields}", { fields: extra.join(", ") }));
+  if (Object.keys(data).length === 0) throw new Error(t("Nothing to save."));
 
   // No NaN/Infinity in any numeric field (they'd be stored and poison sums),
   // and no negative prices or pack sizes.
   for (const [k, v] of Object.entries(data)) {
-    if (typeof v === "number" && !Number.isFinite(v)) throw new Error(`${k} must be a number.`);
-    if ((k === "default_price" || k === "pack_size") && typeof v === "number" && v < 0) throw new Error(`${k} can't be negative.`);
+    if (typeof v === "number" && !Number.isFinite(v)) throw new Error(t("{field} must be a number.", { field: k }));
+    if ((k === "default_price" || k === "pack_size") && typeof v === "number" && v < 0) throw new Error(t("{field} can't be negative.", { field: k }));
   }
 
   // Same floor the dedicated create actions enforce (e.g. createExpense,
   // createAdvance) — the generic inline-edit widget shares these fields but
   // previously skipped this check entirely.
   if ("amount" in data && data.amount !== null && typeof data.amount === "number" && data.amount <= 0) {
-    throw new Error("Amount must be greater than zero.");
+    throw new Error(t("Amount must be greater than zero."));
   }
 
   if (session.role !== "owner") {
     if (OWNER_ONLY_TABLES.has(table)) {
-      throw new Error(NOT_ALLOWED_MESSAGE);
+      throw new Error(t(NOT_ALLOWED_MESSAGE));
     }
     // A rep can never reassign a record to someone else.
     delete (data as Record<string, unknown>).rep_id;
@@ -108,7 +111,7 @@ export async function updateEntry(
   const { data: updated, error } = await query.select("id");
   if (error) throw new Error(error.message);
   if (!updated || updated.length === 0) {
-    throw new Error(NOT_ALLOWED_MESSAGE);
+    throw new Error(t(NOT_ALLOWED_MESSAGE));
   }
 
   for (const path of revalidate) {
@@ -120,14 +123,15 @@ export async function updateEntry(
 export async function deleteEntry(table: string, id: string, revalidate: string[] = []) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   if (!EDITABLE_TABLES.has(table)) {
-    throw new Error("This record type can't be deleted.");
+    throw new Error(t("This record type can't be deleted."));
   }
-  if (!id) throw new Error("Missing record id");
+  if (!id) throw new Error(t("Missing record id"));
 
   if (session.role !== "owner" && OWNER_ONLY_TABLES.has(table)) {
-    throw new Error(NOT_ALLOWED_MESSAGE);
+    throw new Error(t(NOT_ALLOWED_MESSAGE));
   }
 
   let query = supabaseAdmin.from(table).delete().eq("id", id);
@@ -138,7 +142,7 @@ export async function deleteEntry(table: string, id: string, revalidate: string[
   const { data: deleted, error } = await query.select("id");
   if (error) throw new Error(error.message);
   if (!deleted || deleted.length === 0) {
-    throw new Error(NOT_ALLOWED_MESSAGE);
+    throw new Error(t(NOT_ALLOWED_MESSAGE));
   }
 
   for (const path of revalidate) {
