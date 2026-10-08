@@ -18,6 +18,9 @@ export async function createTravelLog(formData: FormData) {
   const start_km = Number(formData.get("start_km") || 0);
   const end_km = Number(formData.get("end_km") || 0);
 
+  if (!Number.isFinite(start_km) || !Number.isFinite(end_km) || start_km < 0) {
+    return { ok: false, message: "Enter valid odometer readings" };
+  }
   if (end_km < start_km) {
     return { ok: false, message: "End km must be greater than start km" };
   }
@@ -86,6 +89,9 @@ export async function updateTravelLog(
   const session = await getSession();
   if (!session) redirect("/login");
 
+  if (!Number.isFinite(data.start_km) || !Number.isFinite(data.end_km) || data.start_km < 0) {
+    throw new Error("Enter valid odometer readings");
+  }
   if (data.end_km < data.start_km) throw new Error("End km must be greater than start km");
   await assertCanAccessRow(session, "av_travel_logs", id);
 

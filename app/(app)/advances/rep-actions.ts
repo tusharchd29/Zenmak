@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { todayIST } from "@/lib/date-range";
+import { parsePositive } from "@/lib/validate";
 
 /**
  * Records cash the company gives A REP to cover field expenses (distinct
@@ -18,11 +19,11 @@ export async function createRepAdvance(formData: FormData) {
   if (!session || session.role !== "owner") redirect("/advances");
 
   const rep_id = String(formData.get("rep_id") || "");
-  const amount = Number(formData.get("amount") || 0);
+  const amount = parsePositive(formData.get("amount"));
   const purpose = String(formData.get("purpose") || "").trim() || null;
   const given_at = String(formData.get("given_at") || "") || todayIST();
 
-  if (!rep_id || !amount || amount <= 0) {
+  if (!rep_id || amount === null) {
     return { ok: false, message: "Rep and a positive amount are required" };
   }
 

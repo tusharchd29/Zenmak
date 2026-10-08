@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { parsePositive } from "@/lib/validate";
 
 /**
  * A rep submits a claim for cash the company owes them back, when their
@@ -18,10 +19,10 @@ export async function submitClaim(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const amount = Number(formData.get("amount") || 0);
+  const amount = parsePositive(formData.get("amount"));
   const notes = String(formData.get("notes") || "").trim() || null;
 
-  if (!amount || amount <= 0) {
+  if (amount === null) {
     return { ok: false, message: "Enter a positive amount" };
   }
 
@@ -53,8 +54,16 @@ export async function advanceClaimStatus(claimId: string, currentStatus: string)
   const update: Record<string, unknown> = { status: next };
   if (next === "paid") update.resolved_at = new Date().toISOString();
 
-  const { error } = await supabaseAdmin.from("av_rep_claims").update(update).eq("id", claimId);
+  // Conditional on the claim really being at currentStatus (which comes
+  // from the browser) — a double tap can't skip approved → paid.
+  const { data: moved, error } = await supabaseAdmin
+    .from("av_rep_claims")
+    .update(update)
+    .eq("id", claimId)
+    .eq("status", currentStatus)
+    .select("id");
   if (error) return { ok: false, message: error.message };
+  if (!moved || moved.length === 0) return { ok: false, message: "This claim was just updated — refresh to see its status." };
 
   revalidatePath("/advances");
   return { ok: true };

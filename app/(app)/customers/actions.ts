@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { parseCoord } from "@/lib/validate";
 
 export async function createCustomer(formData: FormData) {
   const session = await getSession();
@@ -17,8 +18,8 @@ export async function createCustomer(formData: FormData) {
   const state = String(formData.get("state") || "").trim() || null;
   const latRaw = String(formData.get("latitude") || "").trim();
   const lngRaw = String(formData.get("longitude") || "").trim();
-  const latitude = latRaw ? Number(latRaw) : null;
-  const longitude = lngRaw ? Number(lngRaw) : null;
+  const latitude = parseCoord(latRaw, "lat");
+  const longitude = parseCoord(lngRaw, "lng");
 
   if (!name) return { ok: false, message: "Name is required" };
 

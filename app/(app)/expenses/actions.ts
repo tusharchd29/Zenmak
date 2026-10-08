@@ -6,18 +6,19 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { attachPhotoIfPresent } from "@/lib/photos";
 import { todayIST } from "@/lib/date-range";
+import { parsePositive } from "@/lib/validate";
 
 export async function createExpense(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const category = String(formData.get("category") || "").trim();
-  const amount = Number(formData.get("amount") || 0);
+  const amount = parsePositive(formData.get("amount"));
   const note = String(formData.get("note") || "").trim() || null;
   const expense_date =
     String(formData.get("expense_date") || "") || todayIST();
 
-  if (!category || amount <= 0) {
+  if (!category || amount === null) {
     return { ok: false, message: "Category and a positive amount are required" };
   }
 

@@ -15,7 +15,7 @@ export async function recordPayment(
   const session = await getSession();
   if (!session) redirect("/login");
 
-  if (!amount || amount <= 0) {
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
     throw new Error("Enter a valid amount");
   }
   await assertCanAccessRow(session, "av_orders", orderId);

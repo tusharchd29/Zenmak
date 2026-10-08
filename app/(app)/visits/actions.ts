@@ -7,6 +7,7 @@ import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { attachPhotoIfPresent } from "@/lib/photos";
 import { todayIST } from "@/lib/date-range";
+import { parseCoord } from "@/lib/validate";
 
 export async function createVisit(formData: FormData) {
   const session = await getSession();
@@ -22,8 +23,8 @@ export async function createVisit(formData: FormData) {
     String(formData.get("visit_date") || "") || todayIST();
   const latRaw = String(formData.get("latitude") || "").trim();
   const lngRaw = String(formData.get("longitude") || "").trim();
-  const latitude = latRaw ? Number(latRaw) : null;
-  const longitude = lngRaw ? Number(lngRaw) : null;
+  const latitude = parseCoord(latRaw, "lat");
+  const longitude = parseCoord(lngRaw, "lng");
 
   if (!customer_id) return { ok: false, message: "Customer is required" };
   try {

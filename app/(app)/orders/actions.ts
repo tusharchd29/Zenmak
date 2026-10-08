@@ -67,8 +67,11 @@ export async function createOrder(formData: FormData) {
     .filter((it) => it.name);
 
   if (items.length === 0) return { ok: false, message: "At least one product is required" };
-  if (items.some((it) => !it.quantity || it.quantity <= 0 || Number.isNaN(it.quantity))) {
+  if (items.some((it) => !Number.isFinite(it.quantity) || it.quantity <= 0)) {
     return { ok: false, message: "Every product needs a quantity greater than zero" };
+  }
+  if (items.some((it) => it.unitPrice !== null && (!Number.isFinite(it.unitPrice) || it.unitPrice < 0))) {
+    return { ok: false, message: "Prices must be numbers of zero or more" };
   }
 
   // Link each line back to the catalog by exact (case-insensitive) name
@@ -117,12 +120,14 @@ export async function createOrder(formData: FormData) {
     .from("av_order_items")
     .insert(lineItems.map((li) => ({ ...li, order_id: order.id })));
   if (itemsError) {
-    // The order header exists but its lines don't — surface this precisely
-    // rather than implying nothing was saved (which would invite a
-    // duplicate order on retry). The owner can clean this up from Orders.
+    // Undo the header so a failed save leaves nothing half-made behind and
+    // the rep can simply submit again.
+    const { error: undoError } = await supabaseAdmin.from("av_orders").delete().eq("id", order.id);
     return {
       ok: false,
-      message: `Order created but its line items failed to save: ${itemsError.message}. Check Orders before re-submitting.`,
+      message: undoError
+        ? `Order created but its line items failed to save: ${itemsError.message}. Check Orders before re-submitting.`
+        : `Couldn't save the order (${itemsError.message}). Nothing was saved — please try again.`,
     };
   }
 
@@ -162,8 +167,11 @@ export async function updateOrderItems(orderId: string, formData: FormData) {
     .filter((it) => it.name);
 
   if (items.length === 0) return { ok: false, message: "At least one product is required" };
-  if (items.some((it) => !it.quantity || it.quantity <= 0 || Number.isNaN(it.quantity))) {
+  if (items.some((it) => !Number.isFinite(it.quantity) || it.quantity <= 0)) {
     return { ok: false, message: "Every product needs a quantity greater than zero" };
+  }
+  if (items.some((it) => it.unitPrice !== null && (!Number.isFinite(it.unitPrice) || it.unitPrice < 0))) {
+    return { ok: false, message: "Prices must be numbers of zero or more" };
   }
 
   const catalogByName = await resolveOrAddCatalogProducts(items.map((it) => it.name));
@@ -183,16 +191,24 @@ export async function updateOrderItems(orderId: string, formData: FormData) {
   const product = lineItems.map((li) => `${li.product_name} x${li.quantity}`).join(", ");
   const quantity = `${lineItems.length} item${lineItems.length === 1 ? "" : "s"}`;
 
-  const { error: deleteError } = await supabaseAdmin
+  // Insert the new lines first, then remove the old ones by id — if the
+  // insert fails the order keeps its old lines instead of ending up empty.
+  const { data: oldItems, error: readError } = await supabaseAdmin
     .from("av_order_items")
-    .delete()
+    .select("id")
     .eq("order_id", orderId);
-  if (deleteError) return { ok: false, message: deleteError.message };
+  if (readError) return { ok: false, message: readError.message };
 
   const { error: insertError } = await supabaseAdmin
     .from("av_order_items")
     .insert(lineItems.map((li) => ({ ...li, order_id: orderId })));
-  if (insertError) return { ok: false, message: insertError.message };
+  if (insertError) return { ok: false, message: `Couldn't save the products (${insertError.message}). The order is unchanged.` };
+
+  const oldIds = (oldItems ?? []).map((i) => i.id);
+  if (oldIds.length > 0) {
+    const { error: deleteError } = await supabaseAdmin.from("av_order_items").delete().in("id", oldIds);
+    if (deleteError) return { ok: false, message: deleteError.message };
+  }
 
   const { error: updateError } = await supabaseAdmin
     .from("av_orders")
