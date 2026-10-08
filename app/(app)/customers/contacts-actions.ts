@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { getT } from "@/lib/i18n";
 
 /** True if this session may act on the given customer — owner may touch
  * any customer, a rep only their own. Mirrors canActOnTour in
@@ -22,15 +23,16 @@ async function canActOnCustomer(session: { role: string; userId: string }, custo
 export async function createContact(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const customer_id = String(formData.get("customer_id") || "");
   const name = String(formData.get("name") || "").trim();
   const role = String(formData.get("role") || "").trim() || null;
   const phone = String(formData.get("phone") || "").trim() || null;
 
-  if (!customer_id || !name) return { ok: false, message: "Name is required" };
+  if (!customer_id || !name) return { ok: false, message: t("Name is required") };
   if (!(await canActOnCustomer(session, customer_id))) {
-    return { ok: false, message: "Customer not found" };
+    return { ok: false, message: t("Customer not found") };
   }
 
   const { error } = await supabaseAdmin
@@ -45,8 +47,9 @@ export async function createContact(formData: FormData) {
 export async function deleteContact(contactId: string, customerId: string) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
   if (!(await canActOnCustomer(session, customerId))) {
-    return { ok: false, message: "Customer not found" };
+    return { ok: false, message: t("Customer not found") };
   }
 
   // Scope to the customer just checked — otherwise any contact id could be
@@ -58,7 +61,7 @@ export async function deleteContact(contactId: string, customerId: string) {
     .eq("customer_id", customerId)
     .select("id");
   if (error) return { ok: false, message: error.message };
-  if (!deleted || deleted.length === 0) return { ok: false, message: "Contact not found" };
+  if (!deleted || deleted.length === 0) return { ok: false, message: t("Contact not found") };
 
   revalidatePath(`/customers/${customerId}`);
   return { ok: true };

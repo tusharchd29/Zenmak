@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateStateZone } from "./actions";
 import { ZONES, ZONE_LABEL, type Zone } from "@/lib/utils";
+import { useT } from "@/components/I18nProvider";
 
 type ZoneState = { id: string; state: string; zone: Zone };
 
@@ -11,6 +12,7 @@ type ZoneState = { id: string; state: string; zone: Zone };
  * does. Mirrors the inline-save pattern used elsewhere (e.g. TourStops'
  * checkbox toggle), just with a select instead of a checkbox. */
 export function ZoneStateRow({ zoneState }: { zoneState: ZoneState }) {
+  const t = useT();
   const [zone, setZone] = useState<Zone>(zoneState.zone);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function ZoneStateRow({ zoneState }: { zoneState: ZoneState }) {
       const result = await updateStateZone(zoneState.id, next);
       if (!result.ok) {
         setZone(previous);
-        setError(result.message || "Couldn't move that state.");
+        setError(result.message || t("Couldn't move that state."));
       }
     });
   }
@@ -42,7 +44,7 @@ export function ZoneStateRow({ zoneState }: { zoneState: ZoneState }) {
         >
           {ZONES.map((z) => (
             <option key={z} value={z}>
-              {ZONE_LABEL[z]}
+              {t(ZONE_LABEL[z])}
             </option>
           ))}
         </select>

@@ -3,6 +3,7 @@
 import { useState, useTransition, type ReactNode } from "react";
 import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
+import { useT } from "@/components/I18nProvider";
 import { updateEntry } from "./actions";
 
 export type EditField =
@@ -49,6 +50,7 @@ export function EditableCard({
   children: ReactNode;
   className?: string;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState<Record<string, Value>>(initialValues);
   const [pending, startTransition] = useTransition();
@@ -82,7 +84,7 @@ export function EditableCard({
         await updateEntry(table, id, payload, revalidate);
         setEditing(false);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Couldn't save changes");
+        setError(e instanceof Error ? e.message : t("Couldn't save changes"));
       }
     });
   }
@@ -96,7 +98,7 @@ export function EditableCard({
             type="button"
             onClick={() => setEditing(true)}
             className="text-[var(--muted)] hover:text-[var(--teal)] shrink-0 p-1 -m-1"
-            aria-label="Edit"
+            aria-label={t("Edit")}
           >
             <Icon name="edit" size={16} />
           </button>
@@ -165,7 +167,7 @@ export function EditableCard({
             disabled={pending}
             className="btn-primary text-xs px-4 py-1.5"
           >
-            {pending ? "Saving…" : "Save"}
+            {pending ? t("Saving…") : t("Save")}
           </button>
           <button
             type="button"
@@ -173,7 +175,7 @@ export function EditableCard({
             disabled={pending}
             className="text-xs text-[var(--muted)] underline"
           >
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       </div>

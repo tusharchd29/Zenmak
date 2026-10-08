@@ -7,6 +7,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
 import { ZONE_LABEL, type Zone } from "@/lib/utils";
+import { useT } from "@/components/I18nProvider";
 
 type MapCustomer = {
   id: string;
@@ -104,6 +105,7 @@ export function MapView({
    * the usual customer pins. */
   highlightStates?: StateHighlight;
 }) {
+  const t = useT();
   const geoJson = useIndiaStatesGeoJson(!!highlightStates);
 
   const center = useMemo<[number, number]>(() => {
@@ -194,11 +196,11 @@ export function MapView({
               <Popup>
                 <div className="font-medium">{c.name}</div>
                 <div className="text-xs text-gray-500">
-                  {c.segment ?? "General"}
-                  {c.zone && ` · ${ZONE_LABEL[c.zone as Zone] ?? c.zone}`}
+                  {c.segment ?? t("General")}
+                  {c.zone && ` · ${ZONE_LABEL[c.zone as Zone] ? t(ZONE_LABEL[c.zone as Zone]) : c.zone}`}
                 </div>
                 <Link href={`/customers/${c.id}`} className="text-xs underline text-teal-700">
-                  View customer
+                  {t("View customer")}
                 </Link>
               </Popup>
             )}
@@ -207,7 +209,7 @@ export function MapView({
       </MapContainer>
       {highlightStates && (
         <p className="text-[10px] text-[var(--muted)] px-2 py-1 bg-[var(--offwhite)]">
-          State boundaries: DataMeet India community (CC BY 4.0), simplified
+          {t("State boundaries: DataMeet India community (CC BY 4.0), simplified")}
         </p>
       )}
     </div>

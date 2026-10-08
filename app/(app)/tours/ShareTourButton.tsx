@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatDate, dateRange } from "@/lib/utils";
 import { Icon } from "@/components/icon";
 import type { Stop } from "./TourStops";
+import { useT } from "@/components/I18nProvider";
 
 /** Builds a plain-text itinerary from the tour's own already-loaded data
  * and hands it to the device's share sheet (WhatsApp, SMS, email, etc.),
@@ -24,15 +25,22 @@ export function ShareTourButton({
   planNotes: string | null;
   stops: Stop[];
 }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   function buildText() {
     const lines: string[] = [];
     const range =
       endDate && endDate !== weekStart ? `${formatDate(weekStart)} – ${formatDate(endDate)}` : formatDate(weekStart);
-    lines.push(`Tour Plan: ${range}`);
-    if (zone) lines.push(`Zone: ${zone}${states.length ? ` (${states.join(", ")})` : ""}`);
-    if (planNotes) lines.push(`Notes: ${planNotes}`);
+    lines.push(t("Tour Plan: {range}", { range }));
+    if (zone) {
+      lines.push(
+        states.length
+          ? t("Zone: {zone} ({states})", { zone, states: states.join(", ") })
+          : t("Zone: {zone}", { zone }),
+      );
+    }
+    if (planNotes) lines.push(t("Notes: {notes}", { notes: planNotes }));
     lines.push("");
 
     const days = dateRange(weekStart, endDate ?? weekStart);
@@ -48,11 +56,11 @@ export function ShareTourButton({
       const dayStops = byDay.get(day) ?? [];
       lines.push(`${formatDate(day)}:`);
       if (dayStops.length === 0) {
-        lines.push("  No stops planned");
+        lines.push(`  ${t("No stops planned")}`);
       } else {
         for (const s of dayStops) {
           const mark = s.completed ? "[x]" : "[ ]";
-          lines.push(`  ${mark} ${s.customerName ?? "Unnamed stop"}${s.notes ? ` — ${s.notes}` : ""}`);
+          lines.push(`  ${mark} ${s.customerName ?? t("Unnamed stop")}${s.notes ? ` — ${s.notes}` : ""}`);
         }
       }
     }
@@ -63,7 +71,7 @@ export function ShareTourButton({
     const text = buildText();
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title: "Tour Plan", text });
+        await navigator.share({ title: t("Tour Plan"), text });
         return;
       } catch {
         // User cancelled, or the platform share sheet failed — fall through
@@ -85,7 +93,7 @@ export function ShareTourButton({
       onClick={handleShare}
       className="mt-2 text-xs text-[var(--teal)] font-medium inline-flex items-center gap-1"
     >
-      <Icon name="share" size={12} /> {copied ? "Copied!" : "Share plan"}
+      <Icon name="share" size={12} /> {copied ? t("Copied!") : t("Share plan")}
     </button>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getLang, ui } from "@/lib/i18n";
+import { getT, tFor, tx as txOf } from "@/lib/i18n";
 import { getProduct, getCategory, PRODUCTS } from "@/lib/catalog";
 import { getLearningReport, type PersonReport } from "@/lib/learning";
 import { Card } from "@/components/Card";
@@ -10,7 +10,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { LangToggle } from "@/components/LangToggle";
 import { formatDateTime } from "@/lib/utils";
 import { addDaysIST, todayIST } from "@/lib/date-range";
-import type { Lang } from "@/lib/catalog/types";
+import type { L, Lang } from "@/lib/catalog/types";
 
 export const dynamic = "force-dynamic";
 
@@ -24,31 +24,32 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function PersonDetail({ person, lang }: { person: PersonReport; lang: Lang }) {
-  const hi = lang === "hi";
+  const t = tFor(lang);
+  const tx = (l: L) => txOf(l, lang);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <Stat label={hi ? "पास पाठ" : "Lessons passed"} value={`${person.lessonsPassed} / ${PRODUCTS.length}`} />
-        <Stat label={hi ? "कुल प्रयास" : "Total attempts"} value={String(person.attempts)} />
-        <Stat label={hi ? "औसत (सबसे अच्छे) अंक" : "Avg best marks"} value={person.avgBestPct == null ? "—" : `${person.avgBestPct}%`} />
-        <Stat label={hi ? "आखिरी बार" : "Last activity"} value={person.lastActivity ? formatDateTime(person.lastActivity) : "—"} />
+        <Stat label={t("Lessons passed")} value={`${person.lessonsPassed} / ${PRODUCTS.length}`} />
+        <Stat label={t("Total attempts")} value={String(person.attempts)} />
+        <Stat label={t("Avg best marks")} value={person.avgBestPct == null ? "—" : `${person.avgBestPct}%`} />
+        <Stat label={t("Last activity")} value={person.lastActivity ? formatDateTime(person.lastActivity) : "—"} />
       </div>
 
       <Card>
-        <h2 className="font-semibold text-[var(--ink)] mb-2">{hi ? "पाठ अनुसार अंक" : "Marks by lesson"}</h2>
+        <h2 className="font-semibold text-[var(--ink)] mb-2">{t("Marks by lesson")}</h2>
         {person.lessons.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">{hi ? "अभी तक कोई टेस्ट नहीं दिया।" : "No tests taken yet."}</p>
+          <p className="text-sm text-[var(--muted)]">{t("No tests taken yet.")}</p>
         ) : (
           <div className="overflow-x-auto -mx-4 px-4">
             <table className="w-full text-sm min-w-[560px]">
               <thead>
                 <tr className="text-left text-xs text-[var(--muted)] border-b border-[var(--border)]">
-                  <th className="py-2 pr-2 font-medium">{hi ? "पाठ" : "Lesson"}</th>
-                  <th className="py-2 px-2 font-medium">{hi ? "सबसे अच्छा" : "Best"}</th>
-                  <th className="py-2 px-2 font-medium">{hi ? "आखिरी" : "Last"}</th>
-                  <th className="py-2 px-2 font-medium">{hi ? "प्रयास" : "Tries"}</th>
-                  <th className="py-2 px-2 font-medium">{hi ? "पहली बार पास" : "First passed"}</th>
-                  <th className="py-2 pl-2 font-medium">{hi ? "आखिरी प्रयास" : "Last attempt"}</th>
+                  <th className="py-2 pr-2 font-medium">{t("Lesson")}</th>
+                  <th className="py-2 px-2 font-medium">{t("Best")}</th>
+                  <th className="py-2 px-2 font-medium">{t("Last")}</th>
+                  <th className="py-2 px-2 font-medium">{t("Tries")}</th>
+                  <th className="py-2 px-2 font-medium">{t("First passed")}</th>
+                  <th className="py-2 pl-2 font-medium">{t("Last attempt")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -58,7 +59,7 @@ function PersonDetail({ person, lang }: { person: PersonReport; lang: Lang }) {
                     <tr key={l.slug} className="border-b border-[var(--border)] last:border-0 align-top">
                       <td className="py-2 pr-2">
                         <div className="font-medium text-[var(--ink)]">{p?.name ?? l.slug}</div>
-                        {p && <div className="text-xs text-[var(--muted)]">{getCategory(p.category).name[lang]}</div>}
+                        {p && <div className="text-xs text-[var(--muted)]">{tx(getCategory(p.category).name)}</div>}
                       </td>
                       <td className="py-2 px-2 whitespace-nowrap">
                         <span className={l.passed ? "text-emerald-700 font-semibold" : "text-amber-700 font-semibold"}>
@@ -82,7 +83,7 @@ function PersonDetail({ person, lang }: { person: PersonReport; lang: Lang }) {
 
       {person.recent.length > 0 && (
         <Card>
-          <h2 className="font-semibold text-[var(--ink)] mb-2">{hi ? "हाल के सभी प्रयास" : "Every recent attempt"}</h2>
+          <h2 className="font-semibold text-[var(--ink)] mb-2">{t("Every recent attempt")}</h2>
           <ul className="divide-y divide-[var(--border)]">
             {person.recent.map((a, i) => (
               <li key={`${a.slug}-${a.at}-${i}`} className="py-2 flex items-center justify-between gap-3 text-sm">
@@ -95,7 +96,7 @@ function PersonDetail({ person, lang }: { person: PersonReport; lang: Lang }) {
                     a.passed ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-800 border border-amber-200"
                   }`}
                 >
-                  {a.score}/{a.total} · {a.passed ? (hi ? "पास" : "Pass") : hi ? "फेल" : "Fail"}
+                  {a.score}/{a.total} · {a.passed ? (t("Pass")) : t("Fail")}
                 </span>
               </li>
             ))}
@@ -109,8 +110,7 @@ function PersonDetail({ person, lang }: { person: PersonReport; lang: Lang }) {
 export default async function LearningReportPage({ searchParams }: { searchParams: Promise<{ user?: string }> }) {
   const session = await getSession();
   if (!session) redirect("/login");
-  const lang = await getLang();
-  const hi = lang === "hi";
+  const { lang, t } = await getT();
   const isOwner = session.role === "owner";
   const { user } = await searchParams;
 
@@ -127,16 +127,16 @@ export default async function LearningReportPage({ searchParams }: { searchParam
           className="inline-flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         >
           <Icon name="chevron-right" size={14} className="rotate-180" />
-          {isOwner && selected ? (hi ? "पूरी टीम" : "Whole team") : ui("learning", lang)}
+          {isOwner && selected ? (t("Whole team")) : t("Learning")}
         </Link>
         <LangToggle lang={lang} />
       </div>
 
       <h1 className="text-xl font-semibold text-[var(--ink)]">
-        {selected ? selected.name : hi ? "सीखने की रिपोर्ट" : "Learning report"}
+        {selected ? selected.name : t("Learning report")}
       </h1>
       <p className="text-sm text-[var(--muted)] mt-0.5 mb-3">
-        {hi ? "किसने क्या सीखा, कब, और कितने अंक मिले" : "Who learned what, when, and what marks they got"}
+        {t("Who learned what, when, and what marks they got")}
       </p>
 
       {/* Last 12 months, as spreadsheets — scoped to the selected person
@@ -148,7 +148,7 @@ export default async function LearningReportPage({ searchParams }: { searchParam
           return (
             <a key={sheet} href={`/api/reports/csv?${qs}`} className="btn-secondary text-sm px-3 py-1.5 inline-flex items-center gap-1.5">
               <Icon name="download" size={14} />
-              {sheet === "learning" ? (hi ? "सारांश (Excel)" : "Summary (Excel)") : hi ? "सभी टेस्ट (Excel)" : "Every test (Excel)"}
+              {sheet === "learning" ? (t("Summary (Excel)")) : t("Every test (Excel)")}
             </a>
           );
         })}
@@ -157,7 +157,7 @@ export default async function LearningReportPage({ searchParams }: { searchParam
       {!report.available ? (
         <Card>
           <p className="text-sm text-[var(--muted)]">
-            {hi ? "रिपोर्ट अभी उपलब्ध नहीं है।" : "The report isn't available right now — the attempts table couldn't be read."}
+            {t("The report isn't available right now — the attempts table couldn't be read.")}
           </p>
         </Card>
       ) : selected ? (
@@ -171,8 +171,8 @@ export default async function LearningReportPage({ searchParams }: { searchParam
                   <div>
                     <div className="font-medium text-[var(--ink)]">{p.name}</div>
                     <div className="text-xs text-[var(--muted)]">
-                      {p.attempts} {hi ? "प्रयास" : "attempts"} · {hi ? "औसत" : "avg"} {p.avgBestPct == null ? "—" : `${p.avgBestPct}%`} ·{" "}
-                      {p.lastActivity ? formatDateTime(p.lastActivity) : hi ? "अभी शुरू नहीं" : "not started"}
+                      {p.attempts} {t("attempts")} · {t("avg")} {p.avgBestPct == null ? "—" : `${p.avgBestPct}%`} ·{" "}
+                      {p.lastActivity ? formatDateTime(p.lastActivity) : t("not started")}
                     </div>
                   </div>
                   <div className="text-sm font-semibold text-[var(--ink)] shrink-0">

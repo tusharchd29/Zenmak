@@ -121,3 +121,9 @@ a {
   background: var(--border);
   border-radius: 8px;
 }
+
+/* Letter-spacing pulls Indian-script letters apart (and breaks conjuncts),
+   so tracking/uppercase styling applies to English only. */
+html:not([lang="en"]) [class*="tracking-"] {
+  letter-spacing: normal !important;
+}

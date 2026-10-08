@@ -7,6 +7,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { updateTravelLog } from "./actions";
 import { PhotoThumbs } from "@/components/PhotoThumbs";
 import type { EntityPhoto } from "@/lib/photos";
+import { useT } from "@/components/I18nProvider";
 
 export type TravelLog = {
   id: string;
@@ -27,6 +28,7 @@ export function TravelRow({
   showRep: boolean;
   photos?: EntityPhoto[];
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [travelDate, setTravelDate] = useState(log.travel_date);
   const [startKm, setStartKm] = useState(String(log.start_km));
@@ -45,7 +47,7 @@ export function TravelRow({
         setDistance(end - start);
         setEditing(false);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Couldn't save changes");
+        setError(e instanceof Error ? e.message : t("Couldn't save changes"));
       }
     });
   }
@@ -73,7 +75,7 @@ export function TravelRow({
             type="button"
             onClick={() => setEditing(true)}
             className="text-[var(--muted)] hover:text-[var(--teal)] p-1 -m-1"
-            aria-label="Edit"
+            aria-label={t("Edit")}
           >
             <Icon name="edit" size={16} />
           </button>
@@ -86,7 +88,7 @@ export function TravelRow({
     <Card>
       <div className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-[var(--ink)] mb-1">Date</label>
+          <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Date")}</label>
           <input
             type="date"
             className="input-field text-sm"
@@ -96,7 +98,7 @@ export function TravelRow({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-[var(--ink)] mb-1">Start km</label>
+            <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("Start km")}</label>
             <input
               type="number"
               step="0.1"
@@ -106,7 +108,7 @@ export function TravelRow({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--ink)] mb-1">End km</label>
+            <label className="block text-xs font-medium text-[var(--ink)] mb-1">{t("End km")}</label>
             <input
               type="number"
               step="0.1"
@@ -119,7 +121,7 @@ export function TravelRow({
         {error && <div className="text-xs text-red-600">{error}</div>}
         <div className="flex gap-2">
           <button type="button" onClick={save} disabled={pending} className="btn-primary text-xs px-4 py-1.5">
-            {pending ? "Saving…" : "Save"}
+            {pending ? t("Saving…") : t("Save")}
           </button>
           <button
             type="button"
@@ -133,7 +135,7 @@ export function TravelRow({
             disabled={pending}
             className="text-xs text-[var(--muted)] underline"
           >
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ZONES, ZONE_LABEL, type Zone } from "@/lib/utils";
+import { useT } from "./I18nProvider";
 
 /** A zone <select> paired with a state <select> that only lists the states
  * belonging to whichever zone is currently picked — used on the customer
@@ -28,6 +29,7 @@ export function ZoneStateSelect({
   onZoneChange?: (zone: string) => void;
   onStateChange?: (state: string) => void;
 }) {
+  const t = useT();
   const [uncontrolledZone, setUncontrolledZone] = useState(defaultZone);
   const [uncontrolledState, setUncontrolledState] = useState(defaultState);
   const zone = zoneValue ?? uncontrolledZone;
@@ -50,23 +52,23 @@ export function ZoneStateSelect({
   return (
     <div className="grid grid-cols-2 gap-3">
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">Zone</label>
+        <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Zone")}</label>
         <select
           name="zone"
           className="input-field"
           value={zone}
           onChange={(e) => handleZone(e.target.value)}
         >
-          <option value="">No zone</option>
+          <option value="">{t("No zone")}</option>
           {ZONES.map((z) => (
             <option key={z} value={z}>
-              {ZONE_LABEL[z]}
+              {t(ZONE_LABEL[z])}
             </option>
           ))}
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-[var(--ink)] mb-1">State</label>
+        <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("State")}</label>
         <select
           name="state"
           className="input-field"
@@ -74,7 +76,7 @@ export function ZoneStateSelect({
           disabled={options.length === 0}
           onChange={(e) => handleState(e.target.value)}
         >
-          <option value="">{options.length === 0 ? "Pick a zone first" : "No state"}</option>
+          <option value="">{options.length === 0 ? t("Pick a zone first") : t("No state")}</option>
           {options.map((s) => (
             <option key={s} value={s}>
               {s}

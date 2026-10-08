@@ -10,12 +10,14 @@ import { formatDate } from "@/lib/utils";
 import { createCompetitorIntel } from "./actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function CompetitorIntelPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const customersQuery = supabaseAdmin.from("av_customers").select("id, name").order("name");
@@ -32,18 +34,18 @@ export default async function CompetitorIntelPage() {
 
   return (
     <div>
-      <PageHeader title="Competitor Intel" subtitle="What competitors are offering your customers" />
+      <PageHeader title={t("Competitor Intel")} subtitle={t("What competitors are offering your customers")} />
 
       <Card className="mb-6">
-        <div className="font-medium text-[var(--ink)] mb-3">Log intel</div>
+        <div className="font-medium text-[var(--ink)] mb-3">{t("Log intel")}</div>
         <ActionForm action={createCompetitorIntel} resetOnSuccess className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Customer
+              {t("Customer")}
             </label>
             <select name="customer_id" required className="input-field" defaultValue="">
               <option value="" disabled>
-                Select a customer
+                {t("Select a customer")}
               </option>
               {(customers ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
@@ -55,32 +57,32 @@ export default async function CompetitorIntelPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Competitor company
+                {t("Competitor company")}
               </label>
-              <input name="competitor_name" required className="input-field" placeholder="e.g. VetCorp" />
+              <input name="competitor_name" required className="input-field" placeholder={t("e.g. VetCorp")} />
             </div>
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Their product
+                {t("Their product")}
               </label>
               <input
                 name="competitor_product"
                 className="input-field"
-                placeholder="e.g. Calcium Plus"
+                placeholder={t("e.g. Calcium Plus")}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">Notes</label>
-            <textarea name="notes" rows={2} className="input-field" placeholder="What they're offering" />
+            <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Notes")}</label>
+            <textarea name="notes" rows={2} className="input-field" placeholder={t("What they're offering")} />
           </div>
-          <SubmitButton>Save</SubmitButton>
+          <SubmitButton>{t("Save")}</SubmitButton>
         </ActionForm>
       </Card>
 
       {!intel || intel.length === 0 ? (
         <Card>
-          <EmptyState icon="binoculars" title="No competitor notes yet" />
+          <EmptyState icon="binoculars" title={t("No competitor notes yet")} />
         </Card>
       ) : (
         <div className="space-y-2">
@@ -96,9 +98,9 @@ export default async function CompetitorIntelPage() {
                 notes: i.notes,
               }}
               fields={[
-                { name: "competitor_name", label: "Competitor company", type: "text" },
-                { name: "competitor_product", label: "Their product", type: "text" },
-                { name: "notes", label: "Notes", type: "textarea" },
+                { name: "competitor_name", label: t("Competitor company"), type: "text" },
+                { name: "competitor_product", label: t("Their product"), type: "text" },
+                { name: "notes", label: t("Notes"), type: "textarea" },
               ]}
             >
               <div className="font-medium text-[var(--ink)]">

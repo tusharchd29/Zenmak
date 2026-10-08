@@ -13,12 +13,14 @@ import { ActionForm } from "@/components/ActionForm";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ClaimsSection, type Claim } from "./ClaimsSection";
 import { todayIST } from "@/lib/date-range";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdvancesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const customersQuery = supabaseAdmin.from("av_customers").select("id, name").order("name");
@@ -75,9 +77,9 @@ export default async function AdvancesPage() {
 
   return (
     <div>
-      <PageHeader title="Advances" subtitle="Customer advances and rep cash-advance reconciliation" />
+      <PageHeader title={t("Advances")} subtitle={t("Customer advances and rep cash-advance reconciliation")} />
 
-      <div className="font-medium text-[var(--ink)] mb-2">Rep cash advances</div>
+      <div className="font-medium text-[var(--ink)] mb-2">{t("Rep cash advances")}</div>
       <div className="space-y-2 mb-3">
         {repBalances.map((r) => (
           <Card key={r.repId}>
@@ -85,7 +87,10 @@ export default async function AdvancesPage() {
               <div>
                 <div className="font-medium text-[var(--ink)]">{r.name}</div>
                 <div className="text-xs text-[var(--muted)] mt-0.5">
-                  Advanced {formatCurrency(r.advanced)} · Spent {formatCurrency(r.spent)}
+                  {t("Advanced {advanced} · Spent {spent}", {
+                    advanced: formatCurrency(r.advanced),
+                    spent: formatCurrency(r.spent),
+                  })}
                 </div>
               </div>
               <div className="text-right">
@@ -95,7 +100,7 @@ export default async function AdvancesPage() {
                   {formatCurrency(Math.abs(r.balance))}
                 </div>
                 <div className="text-xs text-[var(--muted)]">
-                  {r.balance < 0 ? "Owed to rep" : "Advance remaining"}
+                  {r.balance < 0 ? t("Owed to rep") : t("Advance remaining")}
                 </div>
               </div>
             </div>
@@ -111,13 +116,13 @@ export default async function AdvancesPage() {
 
       {session.role === "owner" && (
         <Card className="mb-6">
-          <div className="font-medium text-[var(--ink)] mb-3">Give a rep an advance</div>
+          <div className="font-medium text-[var(--ink)] mb-3">{t("Give a rep an advance")}</div>
           <ActionForm action={createRepAdvance} resetOnSuccess className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">Rep</label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Rep")}</label>
               <select name="rep_id" required className="input-field" defaultValue="">
                 <option value="" disabled>
-                  Select a rep
+                  {t("Select a rep")}
                 </option>
                 {(repUsers ?? []).map((u) => (
                   <option key={u.id} value={u.id}>
@@ -129,12 +134,12 @@ export default async function AdvancesPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                  Amount (₹)
+                  {t("Amount (₹)")}
                 </label>
                 <input name="amount" type="number" step="0.01" required className="input-field" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--ink)] mb-1">Date</label>
+                <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Date")}</label>
                 <input
                   type="date"
                   name="given_at"
@@ -144,10 +149,10 @@ export default async function AdvancesPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">Purpose</label>
-              <input name="purpose" className="input-field" placeholder="Optional" />
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Purpose")}</label>
+              <input name="purpose" className="input-field" placeholder={t("Optional")} />
             </div>
-            <SubmitButton>Give advance</SubmitButton>
+            <SubmitButton>{t("Give advance")}</SubmitButton>
           </ActionForm>
         </Card>
       )}
@@ -159,7 +164,7 @@ export default async function AdvancesPage() {
               <div>
                 <div className="text-sm text-[var(--ink)]">
                   {session.role === "owner" ? `${e.repName} · ` : ""}
-                  {e.purpose ?? "Cash advance"}
+                  {e.purpose ?? t("Cash advance")}
                 </div>
                 <div className="text-xs text-[var(--muted)]">{formatDate(e.given_at)}</div>
               </div>
@@ -169,17 +174,17 @@ export default async function AdvancesPage() {
         </div>
       )}
 
-      <div className="font-medium text-[var(--ink)] mb-2">Customer advances</div>
+      <div className="font-medium text-[var(--ink)] mb-2">{t("Customer advances")}</div>
       <Card className="mb-6">
-        <div className="font-medium text-[var(--ink)] mb-3">Record an advance</div>
+        <div className="font-medium text-[var(--ink)] mb-3">{t("Record an advance")}</div>
         <ActionForm action={createAdvance} resetOnSuccess className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Customer
+              {t("Customer")}
             </label>
             <select name="customer_id" required className="input-field" defaultValue="">
               <option value="" disabled>
-                Select a customer
+                {t("Select a customer")}
               </option>
               {(customers ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
@@ -190,17 +195,17 @@ export default async function AdvancesPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Amount (₹)
+              {t("Amount (₹)")}
             </label>
             <input name="amount" type="number" step="0.01" required className="input-field" />
           </div>
-          <SubmitButton>Record advance</SubmitButton>
+          <SubmitButton>{t("Record advance")}</SubmitButton>
         </ActionForm>
       </Card>
 
       {!advances || advances.length === 0 ? (
         <Card>
-          <EmptyState icon="wallet" title="No advances recorded" />
+          <EmptyState icon="wallet" title={t("No advances recorded")} />
         </Card>
       ) : (
         <div className="space-y-2">
@@ -213,7 +218,7 @@ export default async function AdvancesPage() {
                 status: a.status,
                 created_at: a.created_at,
                 // @ts-expect-error joined relation
-                customerName: a.av_customers?.name ?? "Customer",
+                customerName: a.av_customers?.name ?? t("Customer"),
               }}
             />
           ))}

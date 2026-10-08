@@ -2,13 +2,15 @@
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { todayIST } from "@/lib/date-range";
+import { msg } from "@/lib/i18n-shared";
+import { useT } from "./I18nProvider";
 
 const PRESETS: { label: string; days: number | null }[] = [
-  { label: "All time", days: null },
-  { label: "Today", days: 0 },
-  { label: "7 days", days: 7 },
-  { label: "30 days", days: 30 },
-  { label: "90 days", days: 90 },
+  { label: msg("All time"), days: null },
+  { label: msg("Today"), days: 0 },
+  { label: msg("7 days"), days: 7 },
+  { label: msg("30 days"), days: 30 },
+  { label: msg("90 days"), days: 90 },
 ];
 
 // India date, not UTC — toISOString() would give yesterday's date before
@@ -27,6 +29,7 @@ export function DateRangeFilter() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useT();
   const from = searchParams.get("from") ?? "";
   const to = searchParams.get("to") ?? "";
   const isAllTime = !from && !to;
@@ -60,26 +63,26 @@ export function DateRangeFilter() {
           type="button"
           onClick={() => applyPreset(p.days)}
           className={`text-xs px-2.5 py-1.5 rounded-full border whitespace-nowrap ${
-            p.label === "All time" && isAllTime
+            p.days === null && isAllTime
               ? "bg-[var(--teal)] text-white border-[var(--teal)]"
               : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--teal)] hover:text-[var(--teal)]"
           }`}
         >
-          {p.label}
+          {t(p.label)}
         </button>
       ))}
       <div className="flex items-center gap-1.5">
         <input
           type="date"
-          aria-label="From date"
+          aria-label={t("From date")}
           className="input-field text-xs py-1.5 w-[132px]"
           value={from}
           onChange={(e) => apply(e.target.value || null, to || null)}
         />
-        <span className="text-xs text-[var(--muted)]">to</span>
+        <span className="text-xs text-[var(--muted)]">{t("to")}</span>
         <input
           type="date"
-          aria-label="To date"
+          aria-label={t("To date")}
           className="input-field text-xs py-1.5 w-[132px]"
           value={to}
           onChange={(e) => apply(from || null, e.target.value || null)}

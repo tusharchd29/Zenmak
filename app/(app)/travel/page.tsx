@@ -14,12 +14,14 @@ import { ActionForm } from "@/components/ActionForm";
 import { getCurrentRate } from "@/lib/rates";
 import { formatCurrency } from "@/lib/utils";
 import { todayIST } from "@/lib/date-range";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function TravelPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const query = supabaseAdmin
@@ -41,18 +43,18 @@ export default async function TravelPage() {
 
   return (
     <div>
-      <PageHeader title="Travel Log" subtitle="Daily odometer readings" />
+      <PageHeader title={t("Travel Log")} subtitle={t("Daily odometer readings")} />
 
       <Card className="mb-6 flex items-center justify-between gap-3">
         <div>
-          <div className="text-xs text-[var(--muted)]">Reimbursement rate</div>
+          <div className="text-xs text-[var(--muted)]">{t("Reimbursement rate")}</div>
           <div className="font-medium text-[var(--ink)]">
-            {currentRate ? `${formatCurrency(currentRate.rate_per_km)}/km` : "Not set"}
+            {currentRate ? `${formatCurrency(currentRate.rate_per_km)}/km` : t("Not set")}
           </div>
         </div>
         {totalReimbursement > 0 && (
           <div className="text-right">
-            <div className="text-xs text-[var(--muted)]">Reimbursement due (below)</div>
+            <div className="text-xs text-[var(--muted)]">{t("Reimbursement due (below)")}</div>
             <div className="font-medium text-[var(--ink)]">{formatCurrency(totalReimbursement)}</div>
           </div>
         )}
@@ -60,12 +62,12 @@ export default async function TravelPage() {
 
       {session.role === "owner" && (
         <Card className="mb-6">
-          <div className="font-medium text-[var(--ink)] mb-3">Set reimbursement rate</div>
+          <div className="font-medium text-[var(--ink)] mb-3">{t("Set reimbursement rate")}</div>
           <ActionForm action={setRatePeriod} resetOnSuccess className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                  Rate (₹/km)
+                  {t("Rate (₹/km)")}
                 </label>
                 <input
                   name="rate_per_km"
@@ -73,12 +75,12 @@ export default async function TravelPage() {
                   step="0.01"
                   required
                   className="input-field"
-                  placeholder={currentRate ? String(currentRate.rate_per_km) : "e.g. 8"}
+                  placeholder={currentRate ? String(currentRate.rate_per_km) : t("e.g. 8")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                  Effective from
+                  {t("Effective from")}
                 </label>
                 <input
                   type="date"
@@ -89,19 +91,20 @@ export default async function TravelPage() {
               </div>
             </div>
             <p className="text-xs text-[var(--muted)]">
-              Applies to travel logged on or after this date — past trips keep the rate that was
-              active when they were logged.
+              {t(
+                "Applies to travel logged on or after this date — past trips keep the rate that was active when they were logged.",
+              )}
             </p>
-            <SubmitButton>Save rate</SubmitButton>
+            <SubmitButton>{t("Save rate")}</SubmitButton>
           </ActionForm>
         </Card>
       )}
 
       <Card className="mb-6">
-        <div className="font-medium text-[var(--ink)] mb-3">Log today&apos;s travel</div>
+        <div className="font-medium text-[var(--ink)] mb-3">{t("Log today's travel")}</div>
         <ActionForm action={createTravelLog} resetOnSuccess className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">Date</label>
+            <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Date")}</label>
             <input
               type="date"
               name="travel_date"
@@ -112,25 +115,25 @@ export default async function TravelPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Start km
+                {t("Start km")}
               </label>
               <input name="start_km" type="number" step="0.1" required className="input-field" />
             </div>
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                End km
+                {t("End km")}
               </label>
               <input name="end_km" type="number" step="0.1" required className="input-field" />
             </div>
           </div>
-          <PhotoField label="Odometer photo (optional)" />
-          <SubmitButton>Save</SubmitButton>
+          <PhotoField label={t("Odometer photo (optional)")} />
+          <SubmitButton>{t("Save")}</SubmitButton>
         </ActionForm>
       </Card>
 
       {!logs || logs.length === 0 ? (
         <Card>
-          <EmptyState icon="car" title="No travel logged yet" />
+          <EmptyState icon="car" title={t("No travel logged yet")} />
         </Card>
       ) : (
         <div className="space-y-2">

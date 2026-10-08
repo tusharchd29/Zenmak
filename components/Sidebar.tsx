@@ -8,6 +8,11 @@ import { cn } from "@/lib/utils";
 import type { Session } from "@/lib/session";
 import { PeacockFeather } from "./PeacockFeather";
 import { ZenmakMark } from "@/components/ZenmakMark";
+import { useT } from "./I18nProvider";
+import { LangToggle } from "./LangToggle";
+import { msg } from "@/lib/i18n-shared";
+
+const ROLE_LABEL = { owner: msg("Owner"), rep: msg("Rep") } as const;
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -15,6 +20,7 @@ function isActive(pathname: string, href: string) {
 
 function NavLink({ item, pathname, iconClassName }: { item: NavItem; pathname: string; iconClassName: string }) {
   const active = isActive(pathname, item.href);
+  const t = useT();
   return (
     <Link
       href={item.href}
@@ -27,13 +33,14 @@ function NavLink({ item, pathname, iconClassName }: { item: NavItem; pathname: s
       )}
     >
       <Icon name={item.icon} size={17} className={active ? "text-[var(--ink)]" : iconClassName} />
-      {item.label}
+      {t(item.label)}
     </Link>
   );
 }
 
 export function Sidebar({ session }: { session: Session }) {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 md:shrink-0 border-r border-[var(--border)] bg-white h-screen sticky top-0">
@@ -44,7 +51,7 @@ export function Sidebar({ session }: { session: Session }) {
             Zenmak
           </div>
           <div className="text-xs text-[var(--muted)] leading-tight">
-            Field Ops
+            {t("Field Ops")}
           </div>
         </div>
         <PeacockFeather size={20} />
@@ -52,7 +59,7 @@ export function Sidebar({ session }: { session: Session }) {
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide px-2 mb-2">
-          Everyday
+          {t("Everyday")}
         </div>
         <ul className="space-y-0.5 mb-5">
           {EVERYDAY_NAV.map((item) => (
@@ -63,7 +70,7 @@ export function Sidebar({ session }: { session: Session }) {
         </ul>
 
         <div className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide px-2 mb-2">
-          Growth & Oversight
+          {t("Growth & Oversight")}
         </div>
         <ul className="space-y-0.5">
           {GROWTH_NAV.filter((item) => !item.ownerOnly || session.role === "owner").map((item) => (
@@ -83,18 +90,19 @@ export function Sidebar({ session }: { session: Session }) {
             <div className="text-sm font-medium text-[var(--ink)] truncate">
               {session.name}
             </div>
-            <div className="text-xs text-[var(--muted)] capitalize">
-              {session.role}
+            <div className="text-xs text-[var(--muted)]">
+              {t(ROLE_LABEL[session.role] ?? session.role)}
             </div>
           </div>
         </div>
+        <LangToggle className="w-full mb-2" />
         <form action="/api/logout" method="POST">
           <button
             type="submit"
             className="w-full flex items-center justify-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--ink)] py-2 rounded-lg border border-[var(--border)]"
           >
             <Icon name="log-out" size={15} />
-            Log out
+            {t("Log out")}
           </button>
         </form>
       </div>

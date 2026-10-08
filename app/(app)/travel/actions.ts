@@ -8,10 +8,12 @@ import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { attachPhotoIfPresent } from "@/lib/photos";
 import { getRateForDate } from "@/lib/rates";
 import { todayIST } from "@/lib/date-range";
+import { getT } from "@/lib/i18n";
 
 export async function createTravelLog(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const travel_date =
     String(formData.get("travel_date") || "") || todayIST();
@@ -19,10 +21,10 @@ export async function createTravelLog(formData: FormData) {
   const end_km = Number(formData.get("end_km") || 0);
 
   if (!Number.isFinite(start_km) || !Number.isFinite(end_km) || start_km < 0) {
-    return { ok: false, message: "Enter valid odometer readings" };
+    return { ok: false, message: t("Enter valid odometer readings") };
   }
   if (end_km < start_km) {
-    return { ok: false, message: "End km must be greater than start km" };
+    return { ok: false, message: t("End km must be greater than start km") };
   }
 
   const rate_per_km = await getRateForDate(travel_date);
@@ -48,7 +50,9 @@ export async function createTravelLog(formData: FormData) {
     revalidatePath("/travel");
     return {
       ok: false,
-      message: `Travel log saved, but the odometer photo didn't upload: ${err instanceof Error ? err.message : "unknown error"}.`,
+      message: t("Travel log saved, but the odometer photo didn't upload: {error}.", {
+        error: err instanceof Error ? err.message : t("unknown error"),
+      }),
     };
   }
 
@@ -64,13 +68,14 @@ export async function createTravelLog(formData: FormData) {
 export async function setRatePeriod(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "owner") redirect("/travel");
+  const { t } = await getT();
 
   const rate_per_km = Number(formData.get("rate_per_km") || 0);
   const effective_from =
     String(formData.get("effective_from") || "") || todayIST();
 
   if (!rate_per_km || rate_per_km <= 0) {
-    return { ok: false, message: "Enter a rate greater than zero" };
+    return { ok: false, message: t("Enter a rate greater than zero") };
   }
 
   const { error } = await supabaseAdmin
@@ -88,11 +93,12 @@ export async function updateTravelLog(
 ) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   if (!Number.isFinite(data.start_km) || !Number.isFinite(data.end_km) || data.start_km < 0) {
-    throw new Error("Enter valid odometer readings");
+    throw new Error(t("Enter valid odometer readings"));
   }
-  if (data.end_km < data.start_km) throw new Error("End km must be greater than start km");
+  if (data.end_km < data.start_km) throw new Error(t("End km must be greater than start km"));
   await assertCanAccessRow(session, "av_travel_logs", id);
 
   const { error } = await supabaseAdmin

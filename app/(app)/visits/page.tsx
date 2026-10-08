@@ -13,6 +13,7 @@ import { getPhotosForEntities } from "@/lib/photos";
 import { PhotoThumbs } from "@/components/PhotoThumbs";
 import { parseDateRange } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function VisitsPage({
   const session = await getSession();
   if (!session) redirect("/login");
   const range = parseDateRange(await searchParams);
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const query = supabaseAdmin
@@ -43,11 +45,11 @@ export default async function VisitsPage({
   return (
     <div>
       <PageHeader
-        title="Visits"
-        subtitle="Field visit log"
+        title={t("Visits")}
+        subtitle={t("Field visit log")}
         action={
           <Link href="/visits/new" className="btn-primary px-4 py-2 text-sm inline-flex items-center gap-1.5">
-            <Icon name="plus" size={15} /> Log visit
+            <Icon name="plus" size={15} /> {t("Log visit")}
           </Link>
         }
       />
@@ -56,7 +58,7 @@ export default async function VisitsPage({
 
       {!visits || visits.length === 0 ? (
         <Card>
-          <EmptyState icon="map-pin" title="No visits logged" subtitle="Log your first customer visit." />
+          <EmptyState icon="map-pin" title={t("No visits logged")} subtitle={t("Log your first customer visit.")} />
         </Card>
       ) : (
         <div className="space-y-2">
@@ -74,27 +76,27 @@ export default async function VisitsPage({
                 next_visit_date: v.next_visit_date,
               }}
               fields={[
-                { name: "visit_date", label: "Visit date", type: "date" },
-                { name: "purpose", label: "Purpose", type: "text" },
-                { name: "discussion_summary", label: "Discussion summary", type: "textarea" },
-                { name: "follow_up_required", label: "Needs a follow-up", type: "checkbox" },
-                { name: "next_visit_date", label: "Next visit date", type: "date" },
+                { name: "visit_date", label: t("Visit date"), type: "date" },
+                { name: "purpose", label: t("Purpose"), type: "text" },
+                { name: "discussion_summary", label: t("Discussion summary"), type: "textarea" },
+                { name: "follow_up_required", label: t("Needs a follow-up"), type: "checkbox" },
+                { name: "next_visit_date", label: t("Next visit date"), type: "date" },
               ]}
               className="flex items-center justify-between"
             >
               <div>
                 <div className="font-medium text-[var(--ink)]">
                   {/* @ts-expect-error joined relation */}
-                  {v.av_customers?.name ?? "Customer"}
+                  {v.av_customers?.name ?? t("Customer")}
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  {v.purpose ?? "Visit"} · {formatDate(v.visit_date)}
+                  {v.purpose ?? t("Visit")} · {formatDate(v.visit_date)}
                 </div>
                 <PhotoThumbs photos={photosByVisit.get(v.id)} />
               </div>
               {v.follow_up_required && (
                 <span className="status-pending px-2.5 py-1 rounded-full text-xs font-semibold">
-                  Follow-up
+                  {t("Follow-up")}
                 </span>
               )}
             </EditableCard>

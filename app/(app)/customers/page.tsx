@@ -8,6 +8,7 @@ import { Card } from "@/components/Card";
 import { EmptyState } from "@/components/EmptyState";
 import { Icon } from "@/components/icon";
 import { ZONES, ZONE_LABEL, type Zone } from "@/lib/utils";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function CustomersPage({
   const session = await getSession();
   if (!session) redirect("/login");
   const { zone: zoneFilter } = await searchParams;
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const query = supabaseAdmin
@@ -33,11 +35,11 @@ export default async function CustomersPage({
   return (
     <div>
       <PageHeader
-        title="Customers"
-        subtitle={`${customers?.length ?? 0} clinics`}
+        title={t("Customers")}
+        subtitle={t("{n} clinics", { n: customers?.length ?? 0 })}
         action={
           <Link href="/customers/new" className="btn-primary px-4 py-2 text-sm inline-flex items-center gap-1.5">
-            <Icon name="plus" size={15} /> New
+            <Icon name="plus" size={15} /> {t("New")}
           </Link>
         }
       />
@@ -51,7 +53,7 @@ export default async function CustomersPage({
               : "border-[var(--border)] text-[var(--muted)]"
           }`}
         >
-          All zones
+          {t("All zones")}
         </Link>
         {ZONES.map((z) => (
           <Link
@@ -63,7 +65,7 @@ export default async function CustomersPage({
                 : "border-[var(--border)] text-[var(--muted)]"
             }`}
           >
-            {ZONE_LABEL[z]}
+            {t(ZONE_LABEL[z])}
           </Link>
         ))}
       </div>
@@ -72,8 +74,8 @@ export default async function CustomersPage({
         <Card>
           <EmptyState
             icon="users"
-            title="No customers yet"
-            subtitle="Add the first clinic you visit to start tracking orders and visits."
+            title={t("No customers yet")}
+            subtitle={t("Add the first clinic you visit to start tracking orders and visits.")}
           />
         </Card>
       ) : (
@@ -84,8 +86,8 @@ export default async function CustomersPage({
                 <div>
                   <div className="font-medium text-[var(--ink)]">{c.name}</div>
                   <div className="text-sm text-[var(--muted)]">
-                    {c.segment ?? "General"} {c.phone ? `· ${c.phone}` : ""}
-                    {c.zone && ` · ${ZONE_LABEL[c.zone as Zone] ?? c.zone}`}
+                    {c.segment ?? t("General")} {c.phone ? `· ${c.phone}` : ""}
+                    {c.zone && ` · ${ZONE_LABEL[c.zone as Zone] ? t(ZONE_LABEL[c.zone as Zone]) : c.zone}`}
                   </div>
                 </div>
                 <Icon name="chevron-right" size={18} className="text-[var(--muted)]" />

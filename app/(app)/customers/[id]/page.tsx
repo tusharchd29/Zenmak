@@ -8,6 +8,7 @@ import { EditableCard } from "../../_shared/EditableCard";
 import { CustomerEditForm } from "../CustomerEditForm";
 import { CustomerContacts } from "../CustomerContacts";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function CustomerDetailPage({
   if (!session) redirect("/login");
   const { id } = await params;
   const repId = getRepScope(session);
+  const { t } = await getT();
 
   let customerQuery = supabaseAdmin
     .from("av_customers")
@@ -60,16 +62,16 @@ export default async function CustomerDetailPage({
 
   return (
     <div>
-      <PageHeader title={customer.name} subtitle={customer.segment ?? "General"} />
+      <PageHeader title={customer.name} subtitle={customer.segment ?? t("General")} />
 
       <CustomerEditForm customer={customer} statesByZone={statesByZone} />
 
       <CustomerContacts customerId={id} contacts={contacts ?? []} />
 
-      <div className="font-medium text-[var(--ink)] mb-2">Orders</div>
+      <div className="font-medium text-[var(--ink)] mb-2">{t("Orders")}</div>
       <div className="space-y-2 mb-6">
         {(orders ?? []).length === 0 && (
-          <div className="text-sm text-[var(--muted)]">No orders yet.</div>
+          <div className="text-sm text-[var(--muted)]">{t("No orders yet.")}</div>
         )}
         {(orders ?? []).map((o) => {
           // Orders with real line items (av_order_items) keep product/
@@ -92,12 +94,12 @@ export default async function CustomerDetailPage({
               ...(hasItems
                 ? []
                 : ([
-                    { name: "product", label: "Product", type: "text" },
-                    { name: "quantity", label: "Quantity", type: "text" },
-                    { name: "amount", label: "Amount (₹)", type: "number" },
+                    { name: "product", label: t("Product"), type: "text" },
+                    { name: "quantity", label: t("Quantity"), type: "text" },
+                    { name: "amount", label: t("Amount (₹)"), type: "number" },
                   ] as const)),
-              { name: "payment_due_date", label: "Payment due date", type: "date" },
-              { name: "notes", label: "Notes", type: "textarea" },
+              { name: "payment_due_date", label: t("Payment due date"), type: "date" },
+              { name: "notes", label: t("Notes"), type: "textarea" },
             ]}
             className="flex items-center justify-between"
           >
@@ -115,10 +117,10 @@ export default async function CustomerDetailPage({
         })}
       </div>
 
-      <div className="font-medium text-[var(--ink)] mb-2">Visits</div>
+      <div className="font-medium text-[var(--ink)] mb-2">{t("Visits")}</div>
       <div className="space-y-2">
         {(visits ?? []).length === 0 && (
-          <div className="text-sm text-[var(--muted)]">No visits logged yet.</div>
+          <div className="text-sm text-[var(--muted)]">{t("No visits logged yet.")}</div>
         )}
         {(visits ?? []).map((v) => (
           <EditableCard
@@ -132,12 +134,12 @@ export default async function CustomerDetailPage({
               discussion_summary: v.discussion_summary,
             }}
             fields={[
-              { name: "visit_date", label: "Visit date", type: "date" },
-              { name: "purpose", label: "Purpose", type: "text" },
-              { name: "discussion_summary", label: "Discussion summary", type: "textarea" },
+              { name: "visit_date", label: t("Visit date"), type: "date" },
+              { name: "purpose", label: t("Purpose"), type: "text" },
+              { name: "discussion_summary", label: t("Discussion summary"), type: "textarea" },
             ]}
           >
-            <div className="text-sm text-[var(--ink)]">{v.purpose ?? "Visit"}</div>
+            <div className="text-sm text-[var(--ink)]">{v.purpose ?? t("Visit")}</div>
             <div className="text-xs text-[var(--muted)] mt-0.5">
               {formatDate(v.visit_date)}
             </div>

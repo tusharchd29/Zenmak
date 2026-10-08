@@ -1,3 +1,4 @@
+import { msg } from "@/lib/i18n-shared";
 import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -5,7 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 // could try them all in minutes. After MAX_FAILURES wrong PINs from one IP
 // within WINDOW_MINUTES, that IP is refused until the window passes.
 const MAX_FAILURES = 8;
-const WINDOW_MINUTES = 15;
+export const WINDOW_MINUTES = 15;
 
 export async function clientIp(): Promise<string> {
   const h = await headers();
@@ -31,4 +32,5 @@ export async function recordLoginAttempt(ip: string, success: boolean) {
   await supabaseAdmin.from("av_login_attempts").insert({ ip, success });
 }
 
-export const LOCKOUT_MESSAGE = `Too many wrong PINs. Please wait ${WINDOW_MINUTES} minutes and try again.`;
+/** Translate with t(LOCKOUT_MESSAGE, { n: WINDOW_MINUTES }). */
+export const LOCKOUT_MESSAGE = msg("Too many wrong PINs. Please wait {n} minutes and try again.");

@@ -3,16 +3,18 @@
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { createSession } from "@/lib/session";
-import { clientIp, isLockedOut, recordLoginAttempt, LOCKOUT_MESSAGE } from "@/lib/login-limit";
+import { getT } from "@/lib/i18n";
+import { clientIp, isLockedOut, recordLoginAttempt, LOCKOUT_MESSAGE, WINDOW_MINUTES } from "@/lib/login-limit";
 
 export async function loginWithPin(pin: string) {
+  const { t } = await getT();
   if (typeof pin !== "string" || !/^\d{4,8}$/.test(pin)) {
-    return { ok: false as const, message: "That PIN wasn't recognized." };
+    return { ok: false as const, message: t("That PIN wasn't recognized.") };
   }
 
   const ip = await clientIp();
   if (await isLockedOut(ip)) {
-    return { ok: false as const, message: LOCKOUT_MESSAGE };
+    return { ok: false as const, message: t(LOCKOUT_MESSAGE, { n: WINDOW_MINUTES }) };
   }
 
   const { data: user, error } = await supabaseAdmin
@@ -24,7 +26,7 @@ export async function loginWithPin(pin: string) {
 
   if (error || !user) {
     await recordLoginAttempt(ip, false);
-    return { ok: false as const, message: "That PIN wasn't recognized." };
+    return { ok: false as const, message: t("That PIN wasn't recognized.") };
   }
 
   await recordLoginAttempt(ip, true);

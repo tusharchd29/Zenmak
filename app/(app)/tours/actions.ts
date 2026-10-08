@@ -5,10 +5,12 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { canViewCustomer } from "@/lib/access";
+import { getT } from "@/lib/i18n";
 
 export async function createTourPlan(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const week_start = String(formData.get("week_start") || "");
   const end_date = String(formData.get("end_date") || "") || null;
@@ -16,9 +18,9 @@ export async function createTourPlan(formData: FormData) {
   const states = formData.getAll("states").map(String).filter(Boolean);
   const plan_notes = String(formData.get("plan_notes") || "").trim() || null;
 
-  if (!week_start) return { ok: false, message: "From date is required" };
+  if (!week_start) return { ok: false, message: t("From date is required") };
   if (end_date && end_date < week_start) {
-    return { ok: false, message: "To date must be on or after the from date" };
+    return { ok: false, message: t("To date must be on or after the from date") };
   }
 
   const { error } = await supabaseAdmin.from("av_tours").insert({
@@ -52,19 +54,20 @@ async function canActOnTour(session: { role: string; userId: string }, tourId: s
 export async function createTourStop(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const tour_id = String(formData.get("tour_id") || "");
   const customer_id = String(formData.get("customer_id") || "") || null;
   const planned_date = String(formData.get("planned_date") || "");
   const notes = String(formData.get("notes") || "").trim() || null;
 
-  if (!tour_id || !planned_date) return { ok: false, message: "A planned date is required" };
+  if (!tour_id || !planned_date) return { ok: false, message: t("A planned date is required") };
   if (!(await canActOnTour(session, tour_id))) {
-    return { ok: false, message: "Tour plan not found" };
+    return { ok: false, message: t("Tour plan not found") };
   }
   // A rep can only plan stops at their own customers.
   if (customer_id && !(await canViewCustomer(session, customer_id))) {
-    return { ok: false, message: "Customer not found" };
+    return { ok: false, message: t("Customer not found") };
   }
 
   // New stop goes to the end of that day's list.
@@ -95,7 +98,8 @@ export async function reorderTourStop(
 ) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Not found" };
+  const { t } = await getT();
+  if (!(await canActOnTour(session, tourId))) return { ok: false, message: t("Not found") };
 
   const { data: stop } = await supabaseAdmin
     .from("av_tour_stops")
@@ -103,7 +107,7 @@ export async function reorderTourStop(
     .eq("id", stopId)
     .eq("tour_id", tourId)
     .maybeSingle();
-  if (!stop) return { ok: false, message: "Stop not found" };
+  if (!stop) return { ok: false, message: t("Stop not found") };
 
   const { data: dayStops } = await supabaseAdmin
     .from("av_tour_stops")
@@ -131,7 +135,8 @@ export async function reorderTourStop(
 export async function toggleTourStop(stopId: string, tourId: string, completed: boolean) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Not found" };
+  const { t } = await getT();
+  if (!(await canActOnTour(session, tourId))) return { ok: false, message: t("Not found") };
 
   // Scoped to the tour just checked, so a stop id from someone else's tour
   // can't be changed by passing your own tour id.
@@ -142,7 +147,7 @@ export async function toggleTourStop(stopId: string, tourId: string, completed: 
     .eq("tour_id", tourId)
     .select("id");
   if (error) return { ok: false, message: error.message };
-  if (!changed || changed.length === 0) return { ok: false, message: "Stop not found" };
+  if (!changed || changed.length === 0) return { ok: false, message: t("Stop not found") };
 
   revalidatePath("/tours");
   return { ok: true };
@@ -151,7 +156,8 @@ export async function toggleTourStop(stopId: string, tourId: string, completed: 
 export async function updateTourStates(tourId: string, states: string[]) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Tour plan not found" };
+  const { t } = await getT();
+  if (!(await canActOnTour(session, tourId))) return { ok: false, message: t("Tour plan not found") };
 
   const { error } = await supabaseAdmin.from("av_tours").update({ states }).eq("id", tourId);
   if (error) return { ok: false, message: error.message };
@@ -163,7 +169,8 @@ export async function updateTourStates(tourId: string, states: string[]) {
 export async function deleteTourStop(stopId: string, tourId: string) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!(await canActOnTour(session, tourId))) return { ok: false, message: "Not found" };
+  const { t } = await getT();
+  if (!(await canActOnTour(session, tourId))) return { ok: false, message: t("Not found") };
 
   const { data: deleted, error } = await supabaseAdmin
     .from("av_tour_stops")
@@ -172,7 +179,7 @@ export async function deleteTourStop(stopId: string, tourId: string) {
     .eq("tour_id", tourId)
     .select("id");
   if (error) return { ok: false, message: error.message };
-  if (!deleted || deleted.length === 0) return { ok: false, message: "Stop not found" };
+  if (!deleted || deleted.length === 0) return { ok: false, message: t("Stop not found") };
 
   revalidatePath("/tours");
   return { ok: true };

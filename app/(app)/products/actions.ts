@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
+import { getT } from "@/lib/i18n";
 
 export async function createProduct(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const name = String(formData.get("name") || "").trim();
   const category = String(formData.get("category") || "").trim() || null;
@@ -17,7 +19,7 @@ export async function createProduct(formData: FormData) {
   const priceRaw = String(formData.get("default_price") || "").trim();
   const default_price = priceRaw ? Number(priceRaw) : null;
 
-  if (!name) return { ok: false, message: "Product name is required" };
+  if (!name) return { ok: false, message: t("Product name is required") };
 
   const { error } = await supabaseAdmin.from("av_products").insert({
     name,

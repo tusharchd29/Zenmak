@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import type { OrderStatus } from "@/lib/utils";
+import { getT } from "@/lib/i18n";
 
 /**
  * Looks up each typed product name against the catalog (case-insensitive)
@@ -41,16 +42,17 @@ async function resolveOrAddCatalogProducts(names: string[]): Promise<Map<string,
 export async function createOrder(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const customer_id = String(formData.get("customer_id") || "");
   const notes = String(formData.get("notes") || "").trim() || null;
   const payment_due_date = String(formData.get("payment_due_date") || "") || null;
 
-  if (!customer_id) return { ok: false, message: "Customer is required" };
+  if (!customer_id) return { ok: false, message: t("Customer is required") };
   try {
     await assertCanUseCustomer(session, customer_id);
   } catch {
-    return { ok: false, message: "Record not found." };
+    return { ok: false, message: t("Record not found.") };
   }
 
   // Three parallel field arrays from the repeating OrderItemsField rows —
@@ -66,12 +68,12 @@ export async function createOrder(formData: FormData) {
     .map((name, i) => ({ name, quantity: quantities[i], unitPrice: unitPrices[i] }))
     .filter((it) => it.name);
 
-  if (items.length === 0) return { ok: false, message: "At least one product is required" };
+  if (items.length === 0) return { ok: false, message: t("At least one product is required") };
   if (items.some((it) => !Number.isFinite(it.quantity) || it.quantity <= 0)) {
-    return { ok: false, message: "Every product needs a quantity greater than zero" };
+    return { ok: false, message: t("Every product needs a quantity greater than zero") };
   }
   if (items.some((it) => it.unitPrice !== null && (!Number.isFinite(it.unitPrice) || it.unitPrice < 0))) {
-    return { ok: false, message: "Prices must be numbers of zero or more" };
+    return { ok: false, message: t("Prices must be numbers of zero or more") };
   }
 
   // Link each line back to the catalog by exact (case-insensitive) name
@@ -126,8 +128,8 @@ export async function createOrder(formData: FormData) {
     return {
       ok: false,
       message: undoError
-        ? `Order created but its line items failed to save: ${itemsError.message}. Check Orders before re-submitting.`
-        : `Couldn't save the order (${itemsError.message}). Nothing was saved — please try again.`,
+        ? t("Order created but its line items failed to save: {error}. Check Orders before re-submitting.", { error: itemsError.message })
+        : t("Couldn't save the order ({error}). Nothing was saved — please try again.", { error: itemsError.message }),
     };
   }
 
@@ -145,15 +147,16 @@ export async function createOrder(formData: FormData) {
 export async function updateOrderItems(orderId: string, formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const { data: order } = await supabaseAdmin
     .from("av_orders")
     .select("rep_id")
     .eq("id", orderId)
     .maybeSingle();
-  if (!order) return { ok: false, message: "Order not found" };
+  if (!order) return { ok: false, message: t("Order not found") };
   if (session.role !== "owner" && order.rep_id !== session.userId) {
-    return { ok: false, message: "Order not found" };
+    return { ok: false, message: t("Order not found") };
   }
 
   const productNames = formData.getAll("item_product").map((v) => String(v).trim());
@@ -166,12 +169,12 @@ export async function updateOrderItems(orderId: string, formData: FormData) {
     .map((name, i) => ({ name, quantity: quantities[i], unitPrice: unitPrices[i] }))
     .filter((it) => it.name);
 
-  if (items.length === 0) return { ok: false, message: "At least one product is required" };
+  if (items.length === 0) return { ok: false, message: t("At least one product is required") };
   if (items.some((it) => !Number.isFinite(it.quantity) || it.quantity <= 0)) {
-    return { ok: false, message: "Every product needs a quantity greater than zero" };
+    return { ok: false, message: t("Every product needs a quantity greater than zero") };
   }
   if (items.some((it) => it.unitPrice !== null && (!Number.isFinite(it.unitPrice) || it.unitPrice < 0))) {
-    return { ok: false, message: "Prices must be numbers of zero or more" };
+    return { ok: false, message: t("Prices must be numbers of zero or more") };
   }
 
   const catalogByName = await resolveOrAddCatalogProducts(items.map((it) => it.name));
@@ -202,7 +205,7 @@ export async function updateOrderItems(orderId: string, formData: FormData) {
   const { error: insertError } = await supabaseAdmin
     .from("av_order_items")
     .insert(lineItems.map((li) => ({ ...li, order_id: orderId })));
-  if (insertError) return { ok: false, message: `Couldn't save the products (${insertError.message}). The order is unchanged.` };
+  if (insertError) return { ok: false, message: t("Couldn't save the products ({error}). The order is unchanged.", { error: insertError.message }) };
 
   const oldIds = (oldItems ?? []).map((i) => i.id);
   if (oldIds.length > 0) {
@@ -233,11 +236,12 @@ const NEXT_STATUS: Record<OrderStatus, OrderStatus | null> = {
 export async function advanceOrderStatus(orderId: string, currentStatus: OrderStatus) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   await assertCanAccessRow(session, "av_orders", orderId);
 
   const next = NEXT_STATUS[currentStatus];
-  if (!next) throw new Error("Order is already fulfilled");
+  if (!next) throw new Error(t("Order is already fulfilled"));
 
   const now = new Date().toISOString();
   const update: Record<string, unknown> = { status: next, updated_at: now };
@@ -258,7 +262,7 @@ export async function advanceOrderStatus(orderId: string, currentStatus: OrderSt
     .eq("status", currentStatus)
     .select("id");
   if (error) throw new Error(error.message);
-  if (!moved || moved.length === 0) throw new Error("This order was just updated — refresh to see its current status.");
+  if (!moved || moved.length === 0) throw new Error(t("This order was just updated — refresh to see its current status."));
 
   revalidatePath("/orders");
   revalidatePath("/dashboard");
@@ -283,15 +287,16 @@ const PREV_STATUS: Record<OrderStatus, OrderStatus | null> = {
 export async function revertOrderStatus(orderId: string, currentStatus: OrderStatus) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   try {
     await assertCanAccessRow(session, "av_orders", orderId);
   } catch {
-    return { ok: false, message: "Record not found." };
+    return { ok: false, message: t("Record not found.") };
   }
 
   const prev = PREV_STATUS[currentStatus];
-  if (!prev) return { ok: false, message: "Order is already at the earliest stage" };
+  if (!prev) return { ok: false, message: t("Order is already at the earliest stage") };
 
   const update: Record<string, unknown> = { status: prev, updated_at: new Date().toISOString() };
   if (currentStatus === "confirmed") update.confirmed_at = null;
@@ -309,7 +314,7 @@ export async function revertOrderStatus(orderId: string, currentStatus: OrderSta
     .eq("status", currentStatus)
     .select("id");
   if (error) return { ok: false, message: error.message };
-  if (!moved || moved.length === 0) return { ok: false, message: "This order was just updated — refresh to see its current status." };
+  if (!moved || moved.length === 0) return { ok: false, message: t("This order was just updated — refresh to see its current status.") };
 
   revalidatePath("/orders");
   revalidatePath("/dashboard");

@@ -20,6 +20,7 @@ import { DateRangeFilter } from "@/components/DateRangeFilter";
 import { redirect } from "next/navigation";
 import { MapView } from "../map/MapViewLazy";
 import { PeacockFeather } from "@/components/PeacockFeather";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function DashboardPage({
   const session = await getSession();
   if (!session) redirect("/login");
   const range = parseDateRange(await searchParams);
+  const { t } = await getT();
 
   const [stats, activity, dues, mapCustomers, zoneBreakdown] = await Promise.all([
     getDashboardStats(session, range),
@@ -43,11 +45,11 @@ export default async function DashboardPage({
   return (
     <div>
       <PageHeader
-        title={`Hi ${session.name}`}
+        title={t("Hi {name}", { name: session.name })}
         subtitle={
           session.role === "owner"
-            ? "Here's how the whole team is doing"
-            : "Here's your day at a glance"
+            ? t("Here's how the whole team is doing")
+            : t("Here's your day at a glance")
         }
         action={<PeacockFeather size={26} />}
       />
@@ -55,10 +57,10 @@ export default async function DashboardPage({
       <DateRangeFilter />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Customers" value={String(stats.customersCount)} icon="users" tone="teal" />
-        <StatCard label="Visits logged" value={String(stats.visitsCount)} icon="map-pin" tone="teal" />
-        <StatCard label="Orders fulfilled" value={String(stats.fulfilledCount)} icon="check" tone="mint" />
-        <StatCard label="In pipeline" value={String(stats.pipelineCount)} icon="clock" tone="seafoam" />
+        <StatCard label={t("Customers")} value={String(stats.customersCount)} icon="users" tone="teal" />
+        <StatCard label={t("Visits logged")} value={String(stats.visitsCount)} icon="map-pin" tone="teal" />
+        <StatCard label={t("Orders fulfilled")} value={String(stats.fulfilledCount)} icon="check" tone="mint" />
+        <StatCard label={t("In pipeline")} value={String(stats.pipelineCount)} icon="clock" tone="seafoam" />
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
@@ -67,13 +69,15 @@ export default async function DashboardPage({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-[var(--muted)] flex items-center gap-1.5">
-                  <Icon name="indian-rupee" size={13} /> Payment due
+                  <Icon name="indian-rupee" size={13} /> {t("Payment due")}
                 </div>
                 <div className="text-lg font-semibold text-[var(--ink)] mt-1">
                   {formatCurrency(dues.totalDue)}
                 </div>
                 <div className="text-xs text-[var(--muted)] mt-0.5">
-                  {dues.outstandingCount} order{dues.outstandingCount === 1 ? "" : "s"} outstanding
+                  {dues.outstandingCount === 1
+                    ? t("{n} order outstanding", { n: dues.outstandingCount })
+                    : t("{n} orders outstanding", { n: dues.outstandingCount })}
                 </div>
               </div>
               <Icon name="chevron-right" size={18} className="text-[var(--muted)]" />
@@ -85,13 +89,15 @@ export default async function DashboardPage({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-[var(--muted)] flex items-center gap-1.5">
-                  <Icon name="clock" size={13} /> Overdue
+                  <Icon name="clock" size={13} /> {t("Overdue")}
                 </div>
                 <div className={`text-lg font-semibold mt-1 ${dues.overdueCount > 0 ? "text-red-600" : "text-[var(--ink)]"}`}>
                   {formatCurrency(dues.overdueTotal)}
                 </div>
                 <div className="text-xs text-[var(--muted)] mt-0.5">
-                  {dues.overdueCount} order{dues.overdueCount === 1 ? "" : "s"} past due
+                  {dues.overdueCount === 1
+                    ? t("{n} order past due", { n: dues.overdueCount })
+                    : t("{n} orders past due", { n: dues.overdueCount })}
                 </div>
               </div>
               <Icon name="chevron-right" size={18} className="text-[var(--muted)]" />
@@ -103,7 +109,7 @@ export default async function DashboardPage({
       <Card className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="font-medium text-[var(--ink)]">
-            {session.role === "owner" ? "Team target" : "Your target"}
+            {session.role === "owner" ? t("Team target") : t("Your target")}
           </div>
           <div className="text-sm text-[var(--muted)]">
             {formatCurrency(stats.fulfilledTotal)} / {formatCurrency(stats.targetTotal)}
@@ -114,7 +120,7 @@ export default async function DashboardPage({
 
       {session.role === "owner" && stats.repBreakdown.length > 0 && (
         <Card className="mb-6">
-          <div className="font-medium text-[var(--ink)] mb-3">By rep</div>
+          <div className="font-medium text-[var(--ink)] mb-3">{t("By rep")}</div>
           <div className="space-y-3">
             {stats.repBreakdown.map((r) => {
               const pct =
@@ -138,10 +144,10 @@ export default async function DashboardPage({
       <Card className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="font-medium text-[var(--ink)] flex items-center gap-1.5">
-            <Icon name="map" size={16} className="text-[var(--teal)]" /> Territory coverage
+            <Icon name="map" size={16} className="text-[var(--teal)]" /> {t("Territory coverage")}
           </div>
           <Link href="/map" className="text-xs text-[var(--teal)] underline">
-            Open full map
+            {t("Open full map")}
           </Link>
         </div>
 
@@ -152,19 +158,19 @@ export default async function DashboardPage({
               href={`/map?zone=${z}`}
               className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--muted)] whitespace-nowrap"
             >
-              {ZONE_LABEL[z]}: {zoneBreakdown[z] ?? 0}
+              {t(ZONE_LABEL[z])}: {zoneBreakdown[z] ?? 0}
             </Link>
           ))}
           {zoneBreakdown.unassigned > 0 && (
             <span className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--muted)] whitespace-nowrap">
-              No zone: {zoneBreakdown.unassigned}
+              {t("No zone: {n}", { n: zoneBreakdown.unassigned })}
             </span>
           )}
         </div>
 
         {mapCustomers.length === 0 && (
           <p className="text-xs text-[var(--muted)] mb-2">
-            No locations pinned yet — showing India. Capture one while adding a customer or logging a visit.
+            {t("No locations pinned yet — showing India. Capture one while adding a customer or logging a visit.")}
           </p>
         )}
         <Link href="/map">
@@ -184,12 +190,12 @@ export default async function DashboardPage({
       </Card>
 
       <Card>
-        <div className="font-medium text-[var(--ink)] mb-3">Recent activity</div>
+        <div className="font-medium text-[var(--ink)] mb-3">{t("Recent activity")}</div>
         {activity.orders.length === 0 && activity.visits.length === 0 ? (
           <EmptyState
             icon="package"
-            title="Nothing yet"
-            subtitle="Visits and orders will show up here as they come in."
+            title={t("Nothing yet")}
+            subtitle={t("Visits and orders will show up here as they come in.")}
           />
         ) : (
           <div className="space-y-3">
@@ -198,7 +204,7 @@ export default async function DashboardPage({
                 <div>
                   <div className="text-[var(--ink)]">
                     {/* @ts-expect-error joined relation */}
-                    {o.av_customers?.name ?? "Order"}
+                    {o.av_customers?.name ?? t("Order")}
                   </div>
                   <div className="text-xs text-[var(--muted)]">
                     {formatDate(o.created_at)} · {formatCurrency(o.amount)}

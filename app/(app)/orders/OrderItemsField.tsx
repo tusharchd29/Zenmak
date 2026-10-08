@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { Autocomplete } from "@/components/Autocomplete";
 import { formatCurrency, formatPackSize } from "@/lib/utils";
+import { useT } from "@/components/I18nProvider";
 
 export type CatalogProduct = {
   id: string;
@@ -46,6 +47,7 @@ export function OrderItemsField({
   products: CatalogProduct[];
   initialItems?: InitialItem[];
 }) {
+  const t = useT();
   const [rows, setRows] = useState<Row[]>(() =>
     initialItems && initialItems.length > 0 ? initialItems.map(rowFromItem) : [blankRow()],
   );
@@ -69,7 +71,7 @@ export function OrderItemsField({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-[var(--ink)] mb-1">Products</label>
+      <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Products")}</label>
       <div className="space-y-2">
         {rows.map((r) => {
           const matched = products.find((p) => p.name.toLowerCase() === r.product.trim().toLowerCase());
@@ -81,7 +83,7 @@ export function OrderItemsField({
                   name="item_product"
                   required
                   className="input-field text-sm"
-                  placeholder="Product name"
+                  placeholder={t("Product name")}
                   options={products.map((p) => p.name)}
                   value={r.product}
                   onValueChange={(v) => onProductChange(r.key, v)}
@@ -93,7 +95,7 @@ export function OrderItemsField({
                   min="0.01"
                   required
                   className="input-field text-sm"
-                  placeholder="Qty"
+                  placeholder={t("Qty")}
                   value={r.quantity}
                   onChange={(e) => updateRow(r.key, { quantity: e.target.value })}
                 />
@@ -103,7 +105,7 @@ export function OrderItemsField({
                   step="0.01"
                   min="0"
                   className="input-field text-sm"
-                  placeholder="Price"
+                  placeholder={t("Price")}
                   value={r.unitPrice}
                   onChange={(e) => updateRow(r.key, { unitPrice: e.target.value })}
                 />
@@ -112,13 +114,13 @@ export function OrderItemsField({
                   onClick={() => setRows((rs) => (rs.length === 1 ? rs : rs.filter((row) => row.key !== r.key)))}
                   disabled={rows.length === 1}
                   className="text-[var(--muted)] hover:text-red-600 disabled:opacity-30 p-1.5"
-                  aria-label="Remove product"
+                  aria-label={t("Remove product")}
                 >
                   <Icon name="x" size={15} />
                 </button>
               </div>
               {packHint && (
-                <div className="text-xs text-[var(--muted)] mt-0.5 pl-0.5">Pack size: {packHint}</div>
+                <div className="text-xs text-[var(--muted)] mt-0.5 pl-0.5">{t("Pack size: {size}", { size: packHint })}</div>
               )}
             </div>
           );
@@ -130,11 +132,11 @@ export function OrderItemsField({
         onClick={() => setRows((rs) => [...rs, blankRow()])}
         className="text-sm text-[var(--teal)] font-medium inline-flex items-center gap-1 mt-2.5"
       >
-        <Icon name="plus" size={14} /> Add another product
+        <Icon name="plus" size={14} /> {t("Add another product")}
       </button>
 
       <div className="text-sm text-[var(--muted)] mt-3 pt-3 border-t border-[var(--border)]">
-        Order total: <span className="font-medium text-[var(--ink)]">{formatCurrency(total)}</span>
+        {t("Order total:")} <span className="font-medium text-[var(--ink)]">{formatCurrency(total)}</span>
       </div>
     </div>
   );

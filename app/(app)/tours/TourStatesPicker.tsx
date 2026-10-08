@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Zone } from "@/lib/utils";
+import { useT } from "@/components/I18nProvider";
 
 /** Checkboxes for every state in the currently-picked zone, so a rep can
  * uncheck the ones this particular trip won't cover. Renders as plain
@@ -22,6 +23,7 @@ export function TourStatesPicker({
   selected?: string[];
   onChange?: (states: string[]) => void;
 }) {
+  const t = useT();
   const options = zone ? statesByZone[zone as Zone] ?? [] : [];
   const [uncontrolled, setUncontrolled] = useState<string[]>(defaultSelected ?? options);
   const checkedStates = selected ?? uncontrolled;
@@ -33,10 +35,10 @@ export function TourStatesPicker({
   }
 
   if (!zone) {
-    return <p className="text-xs text-[var(--muted)]">Pick a zone to choose its states.</p>;
+    return <p className="text-xs text-[var(--muted)]">{t("Pick a zone to choose its states.")}</p>;
   }
   if (options.length === 0) {
-    return <p className="text-xs text-[var(--muted)]">No states set up for this zone yet.</p>;
+    return <p className="text-xs text-[var(--muted)]">{t("No states set up for this zone yet.")}</p>;
   }
 
   return (

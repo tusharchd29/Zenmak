@@ -7,10 +7,12 @@ import { getSession } from "@/lib/session";
 import { attachPhotoIfPresent } from "@/lib/photos";
 import { todayIST } from "@/lib/date-range";
 import { parsePositive } from "@/lib/validate";
+import { getT } from "@/lib/i18n";
 
 export async function createExpense(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const category = String(formData.get("category") || "").trim();
   const amount = parsePositive(formData.get("amount"));
@@ -19,7 +21,7 @@ export async function createExpense(formData: FormData) {
     String(formData.get("expense_date") || "") || todayIST();
 
   if (!category || amount === null) {
-    return { ok: false, message: "Category and a positive amount are required" };
+    return { ok: false, message: t("Category and a positive amount are required") };
   }
 
   const { data: inserted, error } = await supabaseAdmin
@@ -42,7 +44,9 @@ export async function createExpense(formData: FormData) {
     revalidatePath("/expenses");
     return {
       ok: false,
-      message: `Expense saved, but the receipt photo didn't upload: ${err instanceof Error ? err.message : "unknown error"}.`,
+      message: t("Expense saved, but the receipt photo didn't upload: {error}.", {
+        error: err instanceof Error ? err.message : t("unknown error"),
+      }),
     };
   }
 

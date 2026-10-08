@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getLang, ui } from "@/lib/i18n";
+import { getT } from "@/lib/i18n";
 import { CATEGORIES, FOUNDATIONS, productsIn, type CategoryId } from "@/lib/catalog";
 import { getProgress } from "@/lib/learning";
 import { Card } from "@/components/Card";
@@ -16,7 +16,7 @@ export default async function CoursePage({ params }: { params: Promise<{ categor
   const { category: categoryId } = await params;
   const category = CATEGORIES.find((c) => c.id === categoryId);
   if (!category) notFound();
-  const lang = await getLang();
+  const { lang, t, tx, txl } = await getT();
   const progress = await getProgress(session.userId);
   const lessons = productsIn(category.id as CategoryId);
 
@@ -25,7 +25,7 @@ export default async function CoursePage({ params }: { params: Promise<{ categor
       <div className="flex items-center justify-between gap-3 mb-4">
         <Link href="/learn" className="inline-flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--ink)]">
           <Icon name="chevron-right" size={14} className="rotate-180" />
-          {ui("learning", lang)}
+          {t("Learning")}
         </Link>
         <LangToggle lang={lang} />
       </div>
@@ -34,21 +34,21 @@ export default async function CoursePage({ params }: { params: Promise<{ categor
         <div className="w-11 h-11 rounded-xl bg-[var(--teal)]/10 text-[var(--teal)] flex items-center justify-center shrink-0">
           <Icon name={category.icon} size={22} />
         </div>
-        <h1 className="text-xl font-semibold text-[var(--ink)]">{category.name[lang]}</h1>
+        <h1 className="text-xl font-semibold text-[var(--ink)]">{tx(category.name)}</h1>
       </div>
 
       <Card className="mb-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--teal)] mb-1.5">{ui("courseIntro", lang)}</h2>
-        <p className="text-[var(--ink)] leading-relaxed">{category.intro[lang]}</p>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--teal)] mb-1.5">{t("Why it matters on the farm")}</h2>
+        <p className="text-[var(--ink)] leading-relaxed">{tx(category.intro)}</p>
       </Card>
 
       <Card className="mb-4">
         <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[var(--teal)] mb-2">
           <Icon name="graduation-cap" size={16} />
-          {ui("foundations", lang)}
+          {t("Technical foundations")}
         </h2>
         <ul className="space-y-2">
-          {FOUNDATIONS[category.id as CategoryId][lang].map((point) => (
+          {txl(FOUNDATIONS[category.id as CategoryId]).map((point) => (
             <li key={point} className="flex gap-2 text-[var(--ink)] leading-snug">
               <Icon name="lightbulb" size={16} className="text-[var(--saffron)] mt-0.5 shrink-0" />
               <span>{point}</span>
@@ -72,7 +72,7 @@ export default async function CoursePage({ params }: { params: Promise<{ categor
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-[var(--ink)] leading-tight">{p.name}</div>
-                  <div className="text-sm text-[var(--muted)] leading-snug line-clamp-1">{p.tagline[lang]}</div>
+                  <div className="text-sm text-[var(--muted)] leading-snug line-clamp-1">{tx(p.tagline)}</div>
                 </div>
                 {status && (
                   <span className="text-xs text-[var(--muted)] shrink-0">

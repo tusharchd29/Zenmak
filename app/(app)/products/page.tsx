@@ -10,12 +10,14 @@ import { formatCurrency, formatPackSize, PACK_UNITS } from "@/lib/utils";
 import { createProduct } from "./actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const { data: products } = await supabaseAdmin
     .from("av_products")
@@ -26,62 +28,62 @@ export default async function ProductsPage() {
   return (
     <div>
       <PageHeader
-        title="Products"
-        subtitle="Shared catalog everyone orders from — add categories and presets here"
+        title={t("Products")}
+        subtitle={t("Shared catalog everyone orders from — add categories and presets here")}
       />
 
       <Card className="mb-6">
-        <div className="font-medium text-[var(--ink)] mb-3">Add a product</div>
+        <div className="font-medium text-[var(--ink)] mb-3">{t("Add a product")}</div>
         <ActionForm action={createProduct} resetOnSuccess className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">Name</label>
-            <input name="name" required className="input-field" placeholder="e.g. Calcium Bolus" />
+            <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("Name")}</label>
+            <input name="name" required className="input-field" placeholder={t("e.g. Calcium Bolus")} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Category
+                {t("Category")}
               </label>
               <Autocomplete
                 name="category"
-                placeholder="e.g. Supplements"
+                placeholder={t("e.g. Supplements")}
                 options={Array.from(new Set((products ?? []).map((p) => p.category).filter(Boolean))) as string[]}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Unit
+                {t("Unit")}
               </label>
-              <Autocomplete name="default_unit" placeholder="e.g. kg" options={[...PACK_UNITS]} />
+              <Autocomplete name="default_unit" placeholder={t("e.g. kg")} options={[...PACK_UNITS]} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Pack size
+                {t("Pack size")}
               </label>
               <input
                 name="pack_size"
                 type="number"
                 step="0.01"
                 className="input-field"
-                placeholder="e.g. 50"
+                placeholder={t("e.g. 50")}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-                Default price (₹)
+                {t("Default price (₹)")}
               </label>
-              <input name="default_price" type="number" step="0.01" className="input-field" placeholder="Optional" />
+              <input name="default_price" type="number" step="0.01" className="input-field" placeholder={t("Optional")} />
             </div>
           </div>
-          <SubmitButton>Add product</SubmitButton>
+          <SubmitButton>{t("Add product")}</SubmitButton>
         </ActionForm>
       </Card>
 
       {!products || products.length === 0 ? (
         <Card>
-          <EmptyState icon="tags" title="No products yet" subtitle="Add your first product to start using presets on orders." />
+          <EmptyState icon="tags" title={t("No products yet")} subtitle={t("Add your first product to start using presets on orders.")} />
         </Card>
       ) : (
         <div className="space-y-2">
@@ -100,12 +102,12 @@ export default async function ProductsPage() {
                 active: p.active,
               }}
               fields={[
-                { name: "name", label: "Name", type: "text" },
-                { name: "category", label: "Category", type: "text" },
-                { name: "default_unit", label: "Unit", type: "text" },
-                { name: "pack_size", label: "Pack size", type: "number" },
-                { name: "default_price", label: "Default price (₹)", type: "number" },
-                { name: "active", label: "Active (shows in the order picker)", type: "checkbox" },
+                { name: "name", label: t("Name"), type: "text" },
+                { name: "category", label: t("Category"), type: "text" },
+                { name: "default_unit", label: t("Unit"), type: "text" },
+                { name: "pack_size", label: t("Pack size"), type: "number" },
+                { name: "default_price", label: t("Default price (₹)"), type: "number" },
+                { name: "active", label: t("Active (shows in the order picker)"), type: "checkbox" },
               ]}
               className="flex items-center justify-between"
             >
@@ -120,7 +122,7 @@ export default async function ProductsPage() {
                     p.default_price ? formatCurrency(p.default_price) : null,
                   ]
                     .filter(Boolean)
-                    .join(" · ") || "No details yet"}
+                    .join(" · ") || t("No details yet")}
                 </div>
               </div>
             </EditableCard>

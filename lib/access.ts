@@ -1,3 +1,4 @@
+import { msg } from "@/lib/i18n-shared";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Session } from "@/lib/session";
 
@@ -12,7 +13,7 @@ const OWNER_ONLY_TABLES = new Set(["av_brochures"]);
  */
 export async function assertCanAccessRow(session: Session, table: string, id: string) {
   if (session.role === "owner") return;
-  if (OWNER_ONLY_TABLES.has(table)) throw new Error("Only the owner can change this.");
+  if (OWNER_ONLY_TABLES.has(table)) throw new Error(msg("Only the owner can change this."));
 
   const { data, error } = await supabaseAdmin
     .from(table)
@@ -22,7 +23,7 @@ export async function assertCanAccessRow(session: Session, table: string, id: st
 
   if (error || !data || data.rep_id !== session.userId) {
     // Same message whether the row is missing or someone else's, so IDs can't be probed.
-    throw new Error("Record not found.");
+    throw new Error(msg("Record not found."));
   }
 }
 

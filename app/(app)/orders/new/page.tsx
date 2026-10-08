@@ -9,12 +9,14 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { OrderItemsField } from "../OrderItemsField";
 import { DueDatePresets } from "@/components/DueDatePresets";
 import { ActionForm } from "@/components/ActionForm";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewOrderPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const repId = getRepScope(session);
   const customersQuery = supabaseAdmin.from("av_customers").select("id, name").order("name");
@@ -31,16 +33,16 @@ export default async function NewOrderPage() {
 
   return (
     <div>
-      <PageHeader title="New order" />
+      <PageHeader title={t("New order")} />
       <Card>
         <ActionForm action={createOrder} redirectTo="/orders" className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Customer
+              {t("Customer")}
             </label>
             <select name="customer_id" required className="input-field" defaultValue="">
               <option value="" disabled>
-                Select a customer
+                {t("Select a customer")}
               </option>
               {(customers ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
@@ -54,18 +56,18 @@ export default async function NewOrderPage() {
 
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Payment due date
+              {t("Payment due date")}
             </label>
             <input type="date" name="payment_due_date" className="input-field" />
             <DueDatePresets />
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Notes
+              {t("Notes")}
             </label>
-            <textarea name="notes" rows={2} className="input-field" placeholder="Optional" />
+            <textarea name="notes" rows={2} className="input-field" placeholder={t("Optional")} />
           </div>
-          <SubmitButton>Create order</SubmitButton>
+          <SubmitButton>{t("Create order")}</SubmitButton>
         </ActionForm>
       </Card>
     </div>

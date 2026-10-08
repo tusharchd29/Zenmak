@@ -15,12 +15,15 @@ import { TourPlanZoneFields } from "./TourPlanZoneFields";
 import { TourStatesEditor } from "./TourStatesEditor";
 import { MapView } from "../map/MapViewLazy";
 import { ShareTourButton } from "./ShareTourButton";
+import { getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function ToursPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
+  const zoneLabel = (z: string) => (ZONE_LABEL[z as Zone] ? t(ZONE_LABEL[z as Zone]) : z);
 
   const repId = getRepScope(session);
 
@@ -43,7 +46,7 @@ export default async function ToursPage() {
     getStatesByZone(),
   ]);
 
-  const tourIds = (tours ?? []).map((t) => t.id);
+  const tourIds = (tours ?? []).map((tour) => tour.id);
   const { data: allStops } = tourIds.length
     ? await supabaseAdmin
         .from("av_tour_stops")
@@ -88,24 +91,24 @@ export default async function ToursPage() {
   if (session.role === "owner") {
     const repColor = new Map<string, string>();
     const legend: Array<{ repId: string; name: string; color: string }> = [];
-    for (const t of tours ?? []) {
-      if (repColor.has(t.rep_id)) continue;
+    for (const tour of tours ?? []) {
+      if (repColor.has(tour.rep_id)) continue;
       const color = TEAM_MAP_PALETTE[repColor.size % TEAM_MAP_PALETTE.length];
-      repColor.set(t.rep_id, color);
+      repColor.set(tour.rep_id, color);
       // @ts-expect-error joined relation
-      legend.push({ repId: t.rep_id, name: t.av_users?.name ?? "Rep", color });
+      legend.push({ repId: tour.rep_id, name: tour.av_users?.name ?? t("Rep"), color });
     }
     const seenCustomer = new Set<string>();
     const teamCustomers: TeamMapCustomer[] = [];
-    for (const t of tours ?? []) {
-      const color = repColor.get(t.rep_id) ?? TEAM_MAP_PALETTE[0];
-      for (const s of stopsByTour.get(t.id) ?? []) {
+    for (const tour of tours ?? []) {
+      const color = repColor.get(tour.rep_id) ?? TEAM_MAP_PALETTE[0];
+      for (const s of stopsByTour.get(tour.id) ?? []) {
         if (!s.customer_id || s.latitude == null || s.longitude == null) continue;
         if (seenCustomer.has(s.customer_id)) continue;
         seenCustomer.add(s.customer_id);
         teamCustomers.push({
           id: s.customer_id,
-          name: s.customerName ?? "Customer",
+          name: s.customerName ?? t("Customer"),
           latitude: s.latitude,
           longitude: s.longitude,
           zone: null,
@@ -119,11 +122,11 @@ export default async function ToursPage() {
 
   return (
     <div>
-      <PageHeader title="Tour Plan" subtitle="Weekly territory plans" />
+      <PageHeader title={t("Tour Plan")} subtitle={t("Weekly territory plans")} />
 
       {teamMap && teamMap.customers.length > 0 && (
         <Card className="mb-6">
-          <div className="font-medium text-[var(--ink)] mb-2">Team tour map</div>
+          <div className="font-medium text-[var(--ink)] mb-2">{t("Team tour map")}</div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
             {teamMap.legend.map((r) => (
               <div key={r.repId} className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
@@ -137,53 +140,53 @@ export default async function ToursPage() {
       )}
 
       <Card className="mb-6">
-        <div className="font-medium text-[var(--ink)] mb-3">Plan a tour</div>
+        <div className="font-medium text-[var(--ink)] mb-3">{t("Plan a tour")}</div>
         <ActionForm action={createTourPlan} resetOnSuccess className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">From</label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("From")}</label>
               <input type="date" name="week_start" required className="input-field" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">To</label>
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">{t("To")}</label>
               <input type="date" name="end_date" className="input-field" />
             </div>
           </div>
           <TourPlanZoneFields statesByZone={statesByZone} />
           <div>
             <label className="block text-sm font-medium text-[var(--ink)] mb-1">
-              Overview notes
+              {t("Overview notes")}
             </label>
             <textarea
               name="plan_notes"
               rows={2}
               className="input-field"
-              placeholder="Optional — anything not tied to a specific stop"
+              placeholder={t("Optional — anything not tied to a specific stop")}
             />
           </div>
           <p className="text-xs text-[var(--muted)]">
-            Add specific customer stops once the plan is saved.
+            {t("Add specific customer stops once the plan is saved.")}
           </p>
-          <SubmitButton>Save plan</SubmitButton>
+          <SubmitButton>{t("Save plan")}</SubmitButton>
         </ActionForm>
       </Card>
 
       {!tours || tours.length === 0 ? (
         <Card>
-          <EmptyState icon="calendar" title="No tour plans yet" />
+          <EmptyState icon="calendar" title={t("No tour plans yet")} />
         </Card>
       ) : (
         <div className="space-y-2">
-          {tours.map((t) => {
+          {tours.map((tour) => {
             // A rep only picks stops from their own customers; the owner
             // picks from whichever rep owns this tour.
             const repScopedCustomers = repId
               ? (allCustomers ?? []).filter((c) => c.rep_id === repId)
-              : (allCustomers ?? []).filter((c) => c.rep_id === t.rep_id);
+              : (allCustomers ?? []).filter((c) => c.rep_id === tour.rep_id);
             // Narrow further to the states this trip actually covers, once
             // some are picked — an empty selection means "the whole zone",
             // so it doesn't filter anything out.
-            const tourStates = t.states ?? [];
+            const tourStates = tour.states ?? [];
             const tourCustomers =
               tourStates.length > 0
                 ? repScopedCustomers.filter((c) => c.state && tourStates.includes(c.state))
@@ -194,69 +197,71 @@ export default async function ToursPage() {
             );
             return (
               <EditableCard
-                key={t.id}
+                key={tour.id}
                 table="av_tours"
-                id={t.id}
+                id={tour.id}
                 revalidate={["/tours"]}
                 initialValues={{
-                  week_start: t.week_start,
-                  end_date: t.end_date,
-                  zone: t.zone,
-                  plan_notes: t.plan_notes,
+                  week_start: tour.week_start,
+                  end_date: tour.end_date,
+                  zone: tour.zone,
+                  plan_notes: tour.plan_notes,
                 }}
                 fields={[
-                  { name: "week_start", label: "From", type: "date" },
-                  { name: "end_date", label: "To", type: "date" },
+                  { name: "week_start", label: t("From"), type: "date" },
+                  { name: "end_date", label: t("To"), type: "date" },
                   {
                     name: "zone",
-                    label: "Zone",
+                    label: t("Zone"),
                     type: "select",
                     options: [
-                      { value: "", label: "Not set" },
-                      ...ZONES.map((z) => ({ value: z, label: ZONE_LABEL[z as Zone] })),
+                      { value: "", label: t("Not set") },
+                      ...ZONES.map((z) => ({ value: z, label: t(ZONE_LABEL[z as Zone]) })),
                     ],
                   },
-                  { name: "plan_notes", label: "Overview notes", type: "textarea" },
+                  { name: "plan_notes", label: t("Overview notes"), type: "textarea" },
                 ]}
               >
                 <div className="text-sm font-medium text-[var(--ink)]">
-                  {formatDate(t.week_start)}
-                  {t.end_date && t.end_date !== t.week_start && ` – ${formatDate(t.end_date)}`}
-                  {t.zone && (
-                    <span className="text-[var(--muted)]"> · {ZONE_LABEL[t.zone as Zone] ?? t.zone}</span>
+                  {formatDate(tour.week_start)}
+                  {tour.end_date && tour.end_date !== tour.week_start && ` – ${formatDate(tour.end_date)}`}
+                  {tour.zone && (
+                    <span className="text-[var(--muted)]"> · {zoneLabel(tour.zone)}</span>
                   )}
                   {session.role === "owner" && (
                     // @ts-expect-error joined relation
-                    <span className="text-[var(--muted)]"> · {t.av_users?.name}</span>
+                    <span className="text-[var(--muted)]"> · {tour.av_users?.name}</span>
                   )}
                 </div>
-                {t.plan_notes && <div className="text-sm text-[var(--ink)] mt-1">{t.plan_notes}</div>}
+                {tour.plan_notes && <div className="text-sm text-[var(--ink)] mt-1">{tour.plan_notes}</div>}
                 <TourStatesEditor
-                  tourId={t.id}
-                  zone={t.zone}
+                  tourId={tour.id}
+                  zone={tour.zone}
                   states={tourStates}
                   statesByZone={statesByZone}
                 />
                 <TourStops
-                  tourId={t.id}
-                  stops={stopsByTour.get(t.id) ?? []}
+                  tourId={tour.id}
+                  stops={stopsByTour.get(tour.id) ?? []}
                   customers={tourCustomers}
-                  weekStart={t.week_start}
-                  endDate={t.end_date}
+                  weekStart={tour.week_start}
+                  endDate={tour.end_date}
                   lastVisitByCustomer={lastVisitByCustomer}
                 />
                 <ShareTourButton
-                  weekStart={t.week_start}
-                  endDate={t.end_date}
-                  zone={t.zone ? (ZONE_LABEL[t.zone as Zone] ?? t.zone) : null}
+                  weekStart={tour.week_start}
+                  endDate={tour.end_date}
+                  zone={tour.zone ? zoneLabel(tour.zone) : null}
                   states={tourStates}
-                  planNotes={t.plan_notes}
-                  stops={stopsByTour.get(t.id) ?? []}
+                  planNotes={tour.plan_notes}
+                  stops={stopsByTour.get(tour.id) ?? []}
                 />
-                {t.zone && (
+                {tour.zone && (
                   <div className="mt-3 pt-3 border-t border-[var(--border)]">
                     <div className="text-xs text-[var(--muted)] mb-1.5">
-                      {mapCustomers.length} of your customers {tourStates.length > 0 ? "in these states" : "in this zone"}
+                      {tourStates.length > 0
+                        ? t("{n} of your customers in these states", { n: mapCustomers.length })
+                        : t("{n} of your customers in this zone", { n: mapCustomers.length })}
                     </div>
                     <MapView
                       customers={mapCustomers.map((c) => ({
@@ -269,8 +274,8 @@ export default async function ToursPage() {
                       }))}
                       height="320px"
                       highlightStates={{
-                        zone: t.zone as Zone,
-                        allStates: statesByZone[t.zone as Zone] ?? [],
+                        zone: tour.zone as Zone,
+                        allStates: statesByZone[tour.zone as Zone] ?? [],
                         selectedStates: tourStates,
                       }}
                     />

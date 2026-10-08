@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
+import { getT } from "@/lib/i18n";
 
 export async function recordPayment(
   orderId: string,
@@ -14,16 +15,17 @@ export async function recordPayment(
 ) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Enter a valid amount");
+    throw new Error(t("Enter a valid amount"));
   }
   await assertCanAccessRow(session, "av_orders", orderId);
   await assertCanUseCustomer(session, customerId);
   // The payment must be against this order's own customer — both ids come
   // from the browser, and a mismatch would skew each customer's dues.
   const { data: order } = await supabaseAdmin.from("av_orders").select("customer_id").eq("id", orderId).maybeSingle();
-  if (!order || order.customer_id !== customerId) throw new Error("Record not found.");
+  if (!order || order.customer_id !== customerId) throw new Error(t("Record not found."));
 
   const { error } = await supabaseAdmin.from("av_payments").insert({
     order_id: orderId,

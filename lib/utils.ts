@@ -1,3 +1,4 @@
+import { interpolate, msg, type TFunction } from "@/lib/i18n-shared";
 import { todayIST } from "./date-range";
 
 export function cn(...args: Array<string | false | null | undefined>) {
@@ -50,10 +51,10 @@ export const ORDER_STATUSES = [
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  dispatched: "Dispatched",
-  fulfilled: "Fulfilled",
+  pending: msg("Pending"),
+  confirmed: msg("Confirmed"),
+  dispatched: msg("Dispatched"),
+  fulfilled: msg("Fulfilled"),
 };
 
 export const ZONES = ["north", "central", "west", "south"] as const;
@@ -61,10 +62,10 @@ export const ZONES = ["north", "central", "west", "south"] as const;
 export type Zone = (typeof ZONES)[number];
 
 export const ZONE_LABEL: Record<Zone, string> = {
-  north: "North",
-  central: "Central",
-  west: "West",
-  south: "South",
+  north: msg("North"),
+  central: msg("Central"),
+  west: msg("West"),
+  south: msg("South"),
 };
 
 // Suggested units for a product's pack size (av_products.default_unit) —
@@ -112,7 +113,7 @@ export function ageingLabel(order: {
   confirmed_at?: string | null;
   dispatched_at?: string | null;
   fulfilled_at?: string | null;
-}): string {
+}, t: TFunction = (s, v) => interpolate(s, v)): string {
   const since =
     order.status === "fulfilled"
       ? order.fulfilled_at
@@ -123,9 +124,10 @@ export function ageingLabel(order: {
           : order.created_at;
   const days = daysSince(since ?? order.created_at);
   if (days === null) return "";
-  if (order.status === "fulfilled") return days === 0 ? "Fulfilled today" : `Fulfilled ${days}d ago`;
-  if (days === 0) return `${STATUS_LABEL[order.status]} today`;
-  return `${days}d in ${STATUS_LABEL[order.status]}`;
+  if (order.status === "fulfilled") return days === 0 ? t("Fulfilled today") : t("Fulfilled {n}d ago", { n: days });
+  const status = t(STATUS_LABEL[order.status]);
+  if (days === 0) return t("{status} today", { status });
+  return t("{n}d in {status}", { n: days, status });
 }
 
 /** Straight-line (haversine) distance in km between two lat/long points —

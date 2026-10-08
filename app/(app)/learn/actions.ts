@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getProduct, quizFor, PASS_MARK } from "@/lib/catalog";
 import { recordAttempt } from "@/lib/learning";
+import { getT } from "@/lib/i18n";
 
 export type QuizResult = {
   ok: boolean;
@@ -23,13 +24,14 @@ export type QuizResult = {
 export async function submitQuiz(slug: string, answers: number[]): Promise<QuizResult> {
   const session = await getSession();
   if (!session) redirect("/login");
+  const { t } = await getT();
 
   const product = getProduct(slug);
-  if (!product) return { ok: false, message: "Unknown lesson." };
+  if (!product) return { ok: false, message: t("Unknown lesson.") };
 
   const questions = quizFor(product);
   if (!Array.isArray(answers) || answers.length !== questions.length) {
-    return { ok: false, message: "Answer every question first." };
+    return { ok: false, message: t("Answer every question first.") };
   }
 
   const correct = questions.map((q) => q.answer);
