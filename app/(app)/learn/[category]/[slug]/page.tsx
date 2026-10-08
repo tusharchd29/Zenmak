@@ -160,6 +160,7 @@ export default async function LessonPage({ params }: { params: Promise<{ categor
             labels={{
               submit: ui("submit", lang),
               retry: ui("retry", lang),
+              retake: ui("retake", lang),
               passed: ui("passed", lang),
               notPassed: ui("notPassed", lang),
               score: ui("score", lang),

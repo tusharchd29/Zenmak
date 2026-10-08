@@ -51,6 +51,19 @@ export default async function LearnPage() {
         <ProgressBar pct={(passedTotal / PRODUCTS.length) * 100} />
       </Card>
 
+      <Link href="/learn/report" className="block mb-2">
+        <Card className="flex items-center gap-3 hover:border-[var(--seafoam)] transition-colors">
+          <div className="w-9 h-9 rounded-lg bg-[var(--teal)]/10 text-[var(--teal)] flex items-center justify-center shrink-0">
+            <Icon name="bar-chart-3" size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-[var(--ink)]">{isOwner ? ui("report", lang) : ui("myResults", lang)}</div>
+            <div className="text-sm text-[var(--muted)] leading-snug">{ui("reportSub", lang)}</div>
+          </div>
+          <Icon name="chevron-right" size={16} className="text-[var(--muted)] shrink-0" />
+        </Card>
+      </Link>
+
       <Link href="/learn/glossary" className="block mb-5">
         <Card className="flex items-center gap-3 hover:border-[var(--seafoam)] transition-colors">
           <div className="w-9 h-9 rounded-lg bg-[var(--saffron)]/15 text-[var(--saffron)] flex items-center justify-center shrink-0">
