@@ -15,11 +15,9 @@ A mobile-first field sales app for a 5-person veterinary supply team (1 owner + 
 - `SUPABASE_ANON_KEY` — server-only; the app authorizes access at the application layer (PIN session) rather than through Supabase Auth, so the `av_*` tables carry a permissive RLS policy scoping access to this key
 - `SESSION_SECRET` — a long random string used to sign the session cookie
 
-`lib/supabase-admin.ts` and `lib/session.ts` currently carry hardcoded fallback
-values for these three, used only if the env vars are unset — a temporary
-stopgap from when the deploying session couldn't set Vercel project env
-vars. Set the real env vars on Vercel and remove those fallbacks when you get
-a chance.
+`SESSION_SECRET` and `SUPABASE_SERVICE_ROLE_KEY` are required — the app
+refuses to start without them. (Earlier versions carried hardcoded fallbacks;
+those values are in the git history and must be treated as leaked.)
 
 ## Local development
 
