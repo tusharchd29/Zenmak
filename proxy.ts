@@ -24,5 +24,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/logout).*)"],
+  // Public, no-login paths: /docs/* (the brochure and product PDFs in
+  // public/docs) and /p/* (the customer-facing product page) — both are
+  // opened by customers from a WhatsApp link, who have no session.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/logout|docs/|p/).*)"],
 };

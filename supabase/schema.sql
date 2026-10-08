@@ -301,6 +301,24 @@ create table if not exists av_rep_claims (
   resolved_at timestamptz
 );
 
+-- Learning (LMS) progress: one row per (user, product lesson), keeping the
+-- best quiz score. The lessons and quizzes themselves live in code
+-- (lib/catalog), keyed by product slug — so product_slug is a plain text
+-- key, not an FK. See lib/learning.ts; the app works without this table
+-- (progress just isn't saved) until it's created.
+create table if not exists av_learning_progress (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references av_users(id) on delete cascade,
+  product_slug text not null,
+  best_score integer not null default 0,
+  total integer not null,
+  passed boolean not null default false,
+  attempts integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, product_slug)
+);
+
 create index if not exists idx_av_customer_contacts_customer on av_customer_contacts(customer_id);
 create index if not exists idx_av_customers_rep on av_customers(rep_id);
 create index if not exists idx_av_visits_rep on av_visits(rep_id);

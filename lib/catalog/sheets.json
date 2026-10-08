@@ -1,0 +1,531 @@
+{
+ "makzyme-c": {
+  "summary": {
+   "page": 5,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    2,
+    3,
+    4,
+    5
+   ]
+  }
+ },
+ "makzyme-xpl": {
+  "summary": {
+   "page": 5,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    6,
+    7,
+    8,
+    9
+   ]
+  }
+ },
+ "sal-o-mak-plus": {
+  "summary": {
+   "page": 6,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    10,
+    11
+   ]
+  }
+ },
+ "sal-o-mak": {
+  "summary": {
+   "page": 6,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    12,
+    13,
+    14,
+    15
+   ]
+  }
+ },
+ "sal-o-zen": {
+  "summary": {
+   "page": 7,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    16,
+    17
+   ]
+  }
+ },
+ "perfom-x": {
+  "summary": {
+   "page": 7,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    44,
+    45,
+    46,
+    47
+   ]
+  }
+ },
+ "zenact-pro": {
+  "summary": {
+   "page": 8,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    40,
+    41,
+    42,
+    43
+   ]
+  }
+ },
+ "lipolyse-c": {
+  "summary": {
+   "page": 8,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    18,
+    19,
+    20,
+    21
+   ]
+  }
+ },
+ "lipolyse-l": {
+  "summary": {
+   "page": 9,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    22,
+    23,
+    24,
+    25
+   ]
+  }
+ },
+ "ditox-regular": {
+  "summary": {
+   "page": 9,
+   "half": "bottom"
+  }
+ },
+ "ditox-3-plus": {
+  "summary": {
+   "page": 10,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    30,
+    31,
+    32,
+    33
+   ]
+  }
+ },
+ "ditox-3-premium": {
+  "summary": {
+   "page": 10,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    26,
+    27,
+    28,
+    29
+   ]
+  }
+ },
+ "prozenbio-bsb": {
+  "summary": {
+   "page": 11,
+   "half": "top"
+  }
+ },
+ "prozenbio-ws-plus": {
+  "summary": {
+   "page": 11,
+   "half": "bottom"
+  }
+ },
+ "mak-min-premium": {
+  "summary": {
+   "page": 12,
+   "half": "top"
+  }
+ },
+ "mak-min-org": {
+  "summary": {
+   "page": 12,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    34,
+    35,
+    36,
+    37
+   ]
+  }
+ },
+ "mak-min-org-layer-pack": {
+  "summary": {
+   "page": 13,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "feed-supplements",
+   "pages": [
+    38,
+    39
+   ]
+  }
+ },
+ "xshell-ds": {
+  "summary": {
+   "page": 13,
+   "half": "bottom"
+  }
+ },
+ "probeta-ns": {
+  "summary": {
+   "page": 14,
+   "half": "top"
+  }
+ },
+ "probeta-ws": {
+  "summary": {
+   "page": 14,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "liquid-supplements",
+   "pages": [
+    6,
+    7
+   ]
+  }
+ },
+ "electrol-plus-ws": {
+  "summary": {
+   "page": 15,
+   "half": "top"
+  }
+ },
+ "electrol-plus-feed": {
+  "summary": {
+   "page": 15,
+   "half": "bottom"
+  }
+ },
+ "gromak-liquid": {
+  "summary": {
+   "page": 16,
+   "half": "top"
+  }
+ },
+ "gromak-gold-liquid": {
+  "summary": {
+   "page": 16,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "liquid-supplements",
+   "pages": [
+    2,
+    3
+   ]
+  }
+ },
+ "livomak-powder": {
+  "summary": {
+   "page": 17,
+   "half": "top"
+  }
+ },
+ "livomak-liquid": {
+  "summary": {
+   "page": 17,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "liquid-supplements",
+   "pages": [
+    4,
+    5
+   ]
+  }
+ },
+ "natumeric-plus": {
+  "summary": {
+   "page": 18,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "herbal",
+   "pages": [
+    2,
+    3,
+    4,
+    5
+   ]
+  }
+ },
+ "allivisat": {
+  "summary": {
+   "page": 18,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "herbal",
+   "pages": [
+    6,
+    7,
+    8,
+    9
+   ]
+  }
+ },
+ "ovitone-100": {
+  "summary": {
+   "page": 19,
+   "half": "top"
+  }
+ },
+ "respogreen-100": {
+  "summary": {
+   "page": 19,
+   "half": "bottom"
+  }
+ },
+ "att2": {
+  "summary": {
+   "page": 20,
+   "half": "top"
+  }
+ },
+ "avilomak-10": {
+  "summary": {
+   "page": 20,
+   "half": "bottom"
+  }
+ },
+ "zenbracin-4": {
+  "summary": {
+   "page": 21,
+   "half": "top"
+  }
+ },
+ "zee-md-plus": {
+  "summary": {
+   "page": 21,
+   "half": "bottom"
+  }
+ },
+ "ciprozen-10": {
+  "summary": {
+   "page": 22,
+   "half": "top"
+  }
+ },
+ "tetramak-otc-feed": {
+  "summary": {
+   "page": 22,
+   "half": "bottom"
+  }
+ },
+ "tetramak-otc-ws": {
+  "summary": {
+   "page": 23,
+   "half": "top"
+  }
+ },
+ "tiamumak-10": {
+  "summary": {
+   "page": 23,
+   "half": "bottom"
+  }
+ },
+ "tiamumak-80": {
+  "summary": {
+   "page": 24,
+   "half": "top"
+  }
+ },
+ "tylomak-h": {
+  "summary": {
+   "page": 24,
+   "half": "bottom"
+  }
+ },
+ "doxicon-n": {
+  "summary": {
+   "page": 25,
+   "half": "top"
+  }
+ },
+ "primosol-s": {
+  "summary": {
+   "page": 25,
+   "half": "bottom"
+  }
+ },
+ "respiflox-bh": {
+  "summary": {
+   "page": 26,
+   "half": "top"
+  }
+ },
+ "paracip-oral": {
+  "summary": {
+   "page": 26,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "liquid-supplements",
+   "pages": [
+    10
+   ]
+  }
+ },
+ "zenmix-ad3ec": {
+  "summary": {
+   "page": 27,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "liquid-supplements",
+   "pages": [
+    8
+   ]
+  }
+ },
+ "zenvit-e-plus": {
+  "summary": {
+   "page": 27,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "liquid-supplements",
+   "pages": [
+    9
+   ]
+  }
+ },
+ "bio-triple-care-20": {
+  "summary": {
+   "page": 28,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "bio-security",
+   "pages": [
+    2
+   ]
+  }
+ },
+ "hygin-tact-20": {
+  "summary": {
+   "page": 28,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "bio-security",
+   "pages": [
+    3
+   ]
+  }
+ },
+ "saniquat-20": {
+  "summary": {
+   "page": 29,
+   "half": "top"
+  },
+  "detail": {
+   "brochure": "bio-security",
+   "pages": [
+    4
+   ]
+  }
+ },
+ "triox-3": {
+  "summary": {
+   "page": 29,
+   "half": "bottom"
+  },
+  "detail": {
+   "brochure": "bio-security",
+   "pages": [
+    5,
+    6
+   ]
+  }
+ },
+ "gentazen": {
+  "summary": {
+   "page": 30,
+   "half": "top"
+  }
+ },
+ "tylozen-20": {
+  "summary": {
+   "page": 30,
+   "half": "bottom"
+  }
+ },
+ "amikazen": {
+  "summary": {
+   "page": 31,
+   "half": "top"
+  }
+ },
+ "zenoxy-la": {
+  "summary": {
+   "page": 31,
+   "half": "bottom"
+  }
+ },
+ "zenvita": {
+  "summary": {
+   "page": 32,
+   "half": "top"
+  }
+ },
+ "cefton-tazo": {
+  "summary": {
+   "page": 32,
+   "half": "bottom"
+  }
+ }
+}
