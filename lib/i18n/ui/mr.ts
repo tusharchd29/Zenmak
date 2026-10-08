@@ -93,7 +93,7 @@ const dict: Record<string, string> = {
   "Share with a customer": "ग्राहकाला पाठवा",
   "Learn this product": "हा प्रोडक्ट शिका",
   "Already up to date — every product and pack is in the order list.": "आधीच अपडेट आहे — प्रत्येक प्रोडक्ट आणि पॅक ऑर्डर यादीत आहे.",
-  "Added {n} product packs to the order list. Set their prices on the Products page.": "{n} प्रोडक्ट पॅक ऑर्डर यादीत जोडले. त्यांच्या किमती Products पेजवर सेट करा.",
+  "Added {n} product packs to the order list. Set their prices on the Products page.": "{n} प्रोडक्ट पॅक ऑर्डर यादीत जोडले. त्यांच्या किमती “ऑर्डर किंमत यादी” पेजवर सेट करा.",
   "Every Zenmak product from the brochures — open one to share it": "ब्रोशरमधील सर्व Zenmak प्रोडक्ट — उघडून शेअर करा",
   "Learning": "शिका",
   "Brochures & custom PDF": "ब्रोशर बनवा / पाठवा",
