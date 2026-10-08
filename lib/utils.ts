@@ -1,3 +1,5 @@
+import { todayIST } from "./date-range";
+
 export function cn(...args: Array<string | false | null | undefined>) {
   return args.filter(Boolean).join(" ");
 }
@@ -6,7 +8,10 @@ export function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
+  // India time explicitly: pages render on a UTC server, so without this a
+  // timestamp shows 5½ hours behind (and can land on the previous day).
   return d.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -18,6 +23,7 @@ export function formatDateTime(value: string | null | undefined): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -78,7 +84,9 @@ export function formatPackSize(
 
 export function isOverdue(dueDate: string | null | undefined): boolean {
   if (!dueDate) return false;
-  return new Date(dueDate).getTime() < new Date().setHours(0, 0, 0, 0);
+  // Compare India calendar dates as strings — same answer on the server
+  // (UTC) and the phone, and right between midnight and 05:30 IST.
+  return dueDate.slice(0, 10) < todayIST();
 }
 
 /** Whole days between a past timestamp and now (0 for "today"). */

@@ -14,7 +14,7 @@ import { PhotoField } from "@/components/PhotoField";
 import { PhotoThumbs } from "@/components/PhotoThumbs";
 import { getPhotosForEntities } from "@/lib/photos";
 import { ActionForm } from "@/components/ActionForm";
-import { parseDateRange } from "@/lib/date-range";
+import { parseDateRange, todayIST } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
 
 export const dynamic = "force-dynamic";
@@ -129,7 +129,7 @@ export default async function ExpensesPage({
               type="date"
               name="expense_date"
               className="input-field"
-              defaultValue={new Date().toISOString().slice(0, 10)}
+              defaultValue={todayIST()}
             />
           </div>
           <div>

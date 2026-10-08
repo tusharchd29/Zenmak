@@ -9,6 +9,7 @@ import { Icon } from "@/components/icon";
 import { ProgressBar } from "@/components/ProgressBar";
 import { LangToggle } from "@/components/LangToggle";
 import { formatDateTime } from "@/lib/utils";
+import { addDaysIST, todayIST } from "@/lib/date-range";
 import type { Lang } from "@/lib/catalog/types";
 
 export const dynamic = "force-dynamic";
@@ -134,9 +135,24 @@ export default async function LearningReportPage({ searchParams }: { searchParam
       <h1 className="text-xl font-semibold text-[var(--ink)]">
         {selected ? selected.name : hi ? "सीखने की रिपोर्ट" : "Learning report"}
       </h1>
-      <p className="text-sm text-[var(--muted)] mt-0.5 mb-4">
+      <p className="text-sm text-[var(--muted)] mt-0.5 mb-3">
         {hi ? "किसने क्या सीखा, कब, और कितने अंक मिले" : "Who learned what, when, and what marks they got"}
       </p>
+
+      {/* Last 12 months, as spreadsheets — scoped to the selected person
+          (or, for a rep, always themselves; the route enforces that). */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {(["learning", "learning-tests"] as const).map((sheet) => {
+          const qs = new URLSearchParams({ sheet, start: addDaysIST(-365), end: todayIST() });
+          if (selected) qs.append("rep", selected.userId);
+          return (
+            <a key={sheet} href={`/api/reports/csv?${qs}`} className="btn-secondary text-sm px-3 py-1.5 inline-flex items-center gap-1.5">
+              <Icon name="download" size={14} />
+              {sheet === "learning" ? (hi ? "सारांश (Excel)" : "Summary (Excel)") : hi ? "सभी टेस्ट (Excel)" : "Every test (Excel)"}
+            </a>
+          );
+        })}
+      </div>
 
       {!report.available ? (
         <Card>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
+import { todayIST } from "@/lib/date-range";
 
 export async function createTrial(formData: FormData) {
   const session = await getSession();
@@ -13,7 +14,7 @@ export async function createTrial(formData: FormData) {
   const customer_id = String(formData.get("customer_id") || "");
   const product = String(formData.get("product") || "").trim();
   const trial_date =
-    String(formData.get("trial_date") || "") || new Date().toISOString().slice(0, 10);
+    String(formData.get("trial_date") || "") || todayIST();
   const outcome_notes = String(formData.get("outcome_notes") || "").trim() || null;
 
   if (!customer_id || !product) {

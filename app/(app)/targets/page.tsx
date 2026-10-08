@@ -9,19 +9,19 @@ import { setTarget } from "./actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
 import { getEffectiveTargets } from "@/lib/targets";
+import { dayStart, monthStartIST, nextMonthStart } from "@/lib/date-range";
+import { fetchAll } from "@/lib/fetch-all";
 
 export const dynamic = "force-dynamic";
 
-function monthStart(date = new Date()) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
 
 export default async function TargetsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const currentMonth = monthStart();
-  const monthStartDate = `${currentMonth}-01`;
+  // This month in India time (the server runs in UTC).
+  const monthStartDate = monthStartIST();
+  const currentMonth = monthStartDate.slice(0, 7);
 
   const repId = session.role === "owner" ? null : session.userId;
 
@@ -37,12 +37,19 @@ export default async function TargetsPage() {
     reps = [{ id: session.userId, name: session.name }];
   }
 
-  const ordersQuery = supabaseAdmin
-    .from("av_orders")
-    .select("rep_id, amount, status, created_at")
-    .eq("status", "fulfilled")
-    .gte("created_at", monthStartDate);
-  if (repId) ordersQuery.eq("rep_id", repId);
+  // Achievement = orders FULFILLED this month (by fulfilled_at, not when
+  // they were created), paged because every row is summed.
+  const ordersQuery = fetchAll<{ rep_id: string; amount: number | null }>((from, to) => {
+    let q = supabaseAdmin
+      .from("av_orders")
+      .select("rep_id, amount")
+      .eq("status", "fulfilled")
+      .gte("fulfilled_at", dayStart(monthStartDate))
+      .lt("fulfilled_at", dayStart(nextMonthStart(monthStartDate)))
+      .order("id");
+    if (repId) q = q.eq("rep_id", repId);
+    return q.range(from, to);
+  });
 
   // A target carries forward month to month until the owner sets a new one
   // — see lib/targets.ts. "This month" here is always the current calendar

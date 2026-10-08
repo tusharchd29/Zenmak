@@ -12,6 +12,10 @@ function formatCurrency(value: number | null | undefined): string {
   return `Rs. ${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
+// The PDF lists at most this many individual test attempts; the Excel
+// download has them all.
+const LEARNING_ATTEMPT_ROWS = 300;
+
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 9, fontFamily: "Helvetica", color: "#13322b" },
   title: { fontSize: 18, fontWeight: 700, marginBottom: 2 },
@@ -442,6 +446,74 @@ export function ReportDocument({ data }: { data: ReportData }) {
                 );
               })}
             </View>
+          )}
+        </View>
+        )}
+
+        {data.sections.includes("learning") && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Learning & tests ({data.learning.length})</Text>
+          {data.learning.length === 0 ? (
+            <Text style={styles.empty}>No team members in scope.</Text>
+          ) : (
+            <View style={styles.table}>
+              <View style={styles.tr}>
+                <Th width="24%">Person</Th>
+                <Th width="16%">Lessons passed</Th>
+                <Th width="15%">Tests in period</Th>
+                <Th width="15%">Passed in period</Th>
+                <Th width="14%">Avg score</Th>
+                <Th width="16%">Last test</Th>
+              </View>
+              {data.learning.map((l) => (
+                <View key={l.repId} style={styles.tr} wrap={false}>
+                  <Td width="24%">{l.repName}</Td>
+                  <Td width="16%" color={l.passedAllTime === l.totalLessons ? "#037a4e" : undefined}>
+                    {l.passedAllTime} / {l.totalLessons}
+                  </Td>
+                  <Td width="15%">{l.testsInPeriod}</Td>
+                  <Td width="15%">{l.passedInPeriod}</Td>
+                  <Td width="14%" color={l.avgPctInPeriod !== null && l.avgPctInPeriod < 80 ? "#b45309" : undefined}>
+                    {l.avgPctInPeriod === null ? "—" : `${l.avgPctInPeriod}%`}
+                  </Td>
+                  <Td width="16%">{l.lastActivity ? formatDate(l.lastActivity) : "None"}</Td>
+                </View>
+              ))}
+            </View>
+          )}
+          {data.learningAttempts.length > 0 && (
+            <>
+              <Text style={[styles.sectionTitle, { marginTop: 10 }]}>
+                Every test taken in this period ({data.learningAttempts.length})
+              </Text>
+              <View style={styles.table}>
+                <View style={styles.tr}>
+                  <Th width="18%">Date</Th>
+                  <Th width="22%">Person</Th>
+                  <Th width="36%">Lesson</Th>
+                  <Th width="12%">Score</Th>
+                  <Th width="12%">Result</Th>
+                </View>
+                {data.learningAttempts.slice(0, LEARNING_ATTEMPT_ROWS).map((a, i) => (
+                  <View key={`${a.at}-${i}`} style={styles.tr} wrap={false}>
+                    <Td width="18%">{formatDate(a.at)}</Td>
+                    <Td width="22%">{a.repName}</Td>
+                    <Td width="36%">{a.lesson}</Td>
+                    <Td width="12%">
+                      {a.score}/{a.total}
+                    </Td>
+                    <Td width="12%" color={a.passed ? "#037a4e" : "#b45309"}>
+                      {a.passed ? "Pass" : "Fail"}
+                    </Td>
+                  </View>
+                ))}
+              </View>
+              {data.learningAttempts.length > LEARNING_ATTEMPT_ROWS && (
+                <Text style={styles.empty}>
+                  Showing the first {LEARNING_ATTEMPT_ROWS} — download the Excel file for all {data.learningAttempts.length}.
+                </Text>
+              )}
+            </>
           )}
         </View>
         )}

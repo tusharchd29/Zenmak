@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { todayIST } from "@/lib/date-range";
 
 const PRESETS: { label: string; days: number | null }[] = [
   { label: "All time", days: null },
@@ -10,8 +11,10 @@ const PRESETS: { label: string; days: number | null }[] = [
   { label: "90 days", days: 90 },
 ];
 
+// India date, not UTC — toISOString() would give yesterday's date before
+// 05:30 IST.
 function isoDate(d: Date) {
-  return d.toISOString().slice(0, 10);
+  return todayIST(d);
 }
 
 /**

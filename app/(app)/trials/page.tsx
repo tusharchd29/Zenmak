@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/utils";
 import { createTrial } from "./actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
+import { todayIST } from "@/lib/date-range";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,7 @@ export default async function TrialsPage() {
               type="date"
               name="trial_date"
               className="input-field"
-              defaultValue={new Date().toISOString().slice(0, 10)}
+              defaultValue={todayIST()}
             />
           </div>
           <div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { addDaysIST } from "@/lib/date-range";
+
 const PRESETS = [7, 15, 30, 45];
 
 /** Quick-fill buttons for a nearby `<input type="date" name={inputName}>`. */
@@ -7,9 +9,7 @@ export function DueDatePresets({ inputName = "payment_due_date" }: { inputName?:
   function setDays(days: number) {
     const el = document.querySelector<HTMLInputElement>(`input[name="${inputName}"]`);
     if (!el) return;
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    el.value = d.toISOString().slice(0, 10);
+    el.value = addDaysIST(days);
     el.dispatchEvent(new Event("change", { bubbles: true }));
   }
 

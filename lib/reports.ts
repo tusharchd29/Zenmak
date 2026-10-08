@@ -1,3 +1,6 @@
+import { dayStart, dayEnd, todayIST } from "./date-range";
+import { fetchAll, sumPayments } from "./fetch-all";
+import { PRODUCTS, getProduct } from "./catalog";
 import { supabaseAdmin } from "./supabase-admin";
 import { getRepScope } from "./data";
 import { getEffectiveTargets } from "./targets";
@@ -15,6 +18,7 @@ export const REPORT_SECTIONS = [
   "advances",
   "targets",
   "tours",
+  "learning",
 ] as const;
 export type ReportSection = (typeof REPORT_SECTIONS)[number];
 
@@ -26,6 +30,7 @@ export const REPORT_SECTION_LABEL: Record<ReportSection, string> = {
   advances: "Advances & claims",
   targets: "Targets vs achievement",
   tours: "Tour coverage",
+  learning: "Learning & tests",
 };
 
 export type ReportCustomer = {
@@ -137,6 +142,30 @@ export type ReportTour = {
   stops: ReportTourStop[];
 };
 
+export type ReportLearningRow = {
+  repId: string;
+  repName: string;
+  /** Lessons passed at any time, out of totalLessons. */
+  passedAllTime: number;
+  totalLessons: number;
+  /** Tests taken (attempts, retakes included) inside the report's dates. */
+  testsInPeriod: number;
+  /** Distinct lessons passed inside the report's dates. */
+  passedInPeriod: number;
+  /** Average score of tests taken in the period, as a percentage. */
+  avgPctInPeriod: number | null;
+  lastActivity: string | null;
+};
+
+export type ReportLearningAttempt = {
+  at: string;
+  repName: string;
+  lesson: string;
+  score: number;
+  total: number;
+  passed: boolean;
+};
+
 export type ReportData = {
   start: string;
   end: string;
@@ -152,6 +181,8 @@ export type ReportData = {
   travelLogs: ReportTravelLog[];
   targets: ReportTargetRow[];
   tours: ReportTour[];
+  learning: ReportLearningRow[];
+  learningAttempts: ReportLearningAttempt[];
   totals: {
     fulfilledValue: number;
     collected: number;
@@ -165,12 +196,6 @@ export type ReportData = {
   };
 };
 
-function dayStart(date: string) {
-  return `${date}T00:00:00.000Z`;
-}
-function dayEnd(date: string) {
-  return `${date}T23:59:59.999Z`;
-}
 
 /**
  * Which rep_ids a report should be scoped to. A rep always sees only their
@@ -210,15 +235,17 @@ export async function getReportData(
     .select("id, visit_date, purpose, discussion_summary, follow_up_required, next_visit_date, customer_id, rep_id")
     .gte("visit_date", start)
     .lte("visit_date", end)
-    .order("visit_date", { ascending: true });
+    .order("visit_date", { ascending: true })
+    .order("id");
   if (repIds) visitsQuery = visitsQuery.in("rep_id", repIds);
 
   let ordersQuery = supabaseAdmin
     .from("av_orders")
-    .select("id, created_at, product, quantity, amount, status, payment_due_date, customer_id, rep_id")
+    .select("id, created_at, product, quantity, amount, status, payment_due_date, customer_id, rep_id, av_payments(amount)")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) ordersQuery = ordersQuery.in("rep_id", repIds);
 
   let paymentsQuery = supabaseAdmin
@@ -226,7 +253,8 @@ export async function getReportData(
     .select("id, created_at, amount, notes, order_id, customer_id, rep_id")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) paymentsQuery = paymentsQuery.in("rep_id", repIds);
 
   let expensesQuery = supabaseAdmin
@@ -234,7 +262,8 @@ export async function getReportData(
     .select("id, expense_date, category, amount, note, rep_id")
     .gte("expense_date", start)
     .lte("expense_date", end)
-    .order("expense_date", { ascending: true });
+    .order("expense_date", { ascending: true })
+    .order("id");
   if (repIds) expensesQuery = expensesQuery.in("rep_id", repIds);
 
   let advancesQuery = supabaseAdmin
@@ -242,7 +271,8 @@ export async function getReportData(
     .select("id, created_at, amount, status, settled_at, customer_id, rep_id")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) advancesQuery = advancesQuery.in("rep_id", repIds);
 
   let repAdvancesQuery = supabaseAdmin
@@ -250,7 +280,8 @@ export async function getReportData(
     .select("id, given_at, amount, purpose, rep_id")
     .gte("given_at", start)
     .lte("given_at", end)
-    .order("given_at", { ascending: true });
+    .order("given_at", { ascending: true })
+    .order("id");
   if (repIds) repAdvancesQuery = repAdvancesQuery.in("rep_id", repIds);
 
   let claimsQuery = supabaseAdmin
@@ -258,7 +289,8 @@ export async function getReportData(
     .select("id, created_at, amount, status, notes, rep_id")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) claimsQuery = claimsQuery.in("rep_id", repIds);
 
   let travelQuery = supabaseAdmin
@@ -266,7 +298,8 @@ export async function getReportData(
     .select("id, travel_date, distance_km, rate_per_km, rep_id")
     .gte("travel_date", start)
     .lte("travel_date", end)
-    .order("travel_date", { ascending: true });
+    .order("travel_date", { ascending: true })
+    .order("id");
   if (repIds) travelQuery = travelQuery.in("rep_id", repIds);
 
   let toursQuery = supabaseAdmin
@@ -274,7 +307,8 @@ export async function getReportData(
     .select("id, week_start, zone, rep_id")
     .gte("week_start", start)
     .lte("week_start", end)
-    .order("week_start", { ascending: true });
+    .order("week_start", { ascending: true })
+    .order("id");
   if (repIds) toursQuery = toursQuery.in("rep_id", repIds);
 
   const [
@@ -288,32 +322,31 @@ export async function getReportData(
     travelRes,
     toursRes,
   ] = await Promise.all([
-    visitsQuery,
-    ordersQuery,
-    paymentsQuery,
-    expensesQuery,
-    advancesQuery,
-    repAdvancesQuery,
-    claimsQuery,
-    travelQuery,
-    toursQuery,
+    // Every section is paged past Supabase's 1,000-row response cap (a
+    // year-long report can exceed it). The secondary order on id keeps the
+    // pages stable when several rows share a date; range() overwrites
+    // offset/limit on the builder and each await re-fetches.
+    fetchAll((from, to) => visitsQuery.range(from, to)),
+    fetchAll((from, to) => ordersQuery.range(from, to)),
+    fetchAll((from, to) => paymentsQuery.range(from, to)),
+    fetchAll((from, to) => expensesQuery.range(from, to)),
+    fetchAll((from, to) => advancesQuery.range(from, to)),
+    fetchAll((from, to) => repAdvancesQuery.range(from, to)),
+    fetchAll((from, to) => claimsQuery.range(from, to)),
+    fetchAll((from, to) => travelQuery.range(from, to)),
+    fetchAll((from, to) => toursQuery.range(from, to)),
   ]);
 
   const orderRows = ordersRes.data ?? [];
-  const orderIds = orderRows.map((o) => o.id);
 
   // Payments against these orders (not just payments *recorded* in the
-  // window) determine how much of each order is still due, so this is a
-  // second, unscoped-by-date query.
-  const { data: allPaymentsForOrders } = orderIds.length
-    ? await supabaseAdmin.from("av_payments").select("order_id, amount").in("order_id", orderIds)
-    : { data: [] as { order_id: string; amount: number }[] };
+  // window) determine how much of each order is still due — embedded in the
+  // orders query above rather than a long ?order_id=in.(...) lookup, which
+  // fails once a report spans a few hundred orders.
   const paidByOrder = new Map<string, number>();
-  for (const p of allPaymentsForOrders ?? []) {
-    paidByOrder.set(p.order_id, (paidByOrder.get(p.order_id) ?? 0) + p.amount);
-  }
+  for (const o of orderRows) paidByOrder.set(o.id, sumPayments((o as { av_payments?: { amount: number }[] }).av_payments));
 
-  const today = new Date().setHours(0, 0, 0, 0);
+  const today = todayIST();
 
   const orders: ReportOrder[] = orderRows.map((o) => {
     const paid = paidByOrder.get(o.id) ?? 0;
@@ -435,13 +468,79 @@ export async function getReportData(
   const targetRepIds = repIds ?? Array.from(userName.keys());
   const monthDate = `${start.slice(0, 7)}-01`;
   const effectiveTargets = want("targets") ? await getEffectiveTargets(targetRepIds, monthDate) : new Map();
+  // Achievement = orders FULFILLED inside the report's dates (fulfilled_at),
+  // not orders created then — an order created last month and fulfilled
+  // in this window counts here.
   const fulfilledByRep = new Map<string, number>();
-  for (const o of orders) {
-    if (o.status !== "fulfilled") continue;
-    const repEntry = orderRows.find((r) => r.id === o.id);
-    const repId = repEntry?.rep_id;
-    if (!repId) continue;
-    fulfilledByRep.set(repId, (fulfilledByRep.get(repId) ?? 0) + (o.amount ?? 0));
+  if (want("targets")) {
+    const { data: fulfilledRows } = await fetchAll((from, to) => {
+      let q = supabaseAdmin
+        .from("av_orders")
+        .select("id, rep_id, amount")
+        .eq("status", "fulfilled")
+        .gte("fulfilled_at", dayStart(start))
+        .lte("fulfilled_at", dayEnd(end))
+        .order("id");
+      if (repIds) q = q.in("rep_id", repIds);
+      return q.range(from, to);
+    });
+    for (const o of fulfilledRows) {
+      fulfilledByRep.set(o.rep_id, (fulfilledByRep.get(o.rep_id) ?? 0) + (o.amount ?? 0));
+    }
+  }
+
+  // Learning & tests — per person in scope: lessons passed overall, and
+  // tests taken / passed / average score inside the report's dates.
+  const learning: ReportLearningRow[] = [];
+  const learningAttempts: ReportLearningAttempt[] = [];
+  if (want("learning")) {
+    let peopleQuery = supabaseAdmin.from("av_users").select("id, name").eq("active", true).order("name");
+    if (repIds) peopleQuery = peopleQuery.in("id", repIds);
+    const [{ data: people }, { data: attemptRows }, { data: progressRows }] = await Promise.all([
+      peopleQuery,
+      fetchAll((from, to) => {
+        let q = supabaseAdmin
+          .from("av_learning_attempts")
+          .select("user_id, product_slug, score, total, passed, created_at")
+          .gte("created_at", dayStart(start))
+          .lte("created_at", dayEnd(end))
+          .order("created_at", { ascending: true })
+          .order("id");
+        if (repIds) q = q.in("user_id", repIds);
+        return q.range(from, to);
+      }),
+      fetchAll((from, to) => {
+        let q = supabaseAdmin.from("av_learning_progress").select("user_id, passed, updated_at").eq("passed", true).order("id");
+        if (repIds) q = q.in("user_id", repIds);
+        return q.range(from, to);
+      }),
+    ]);
+    for (const p of people ?? []) {
+      const mine = attemptRows.filter((a) => a.user_id === p.id);
+      const pct = mine.map((a) => a.score / a.total);
+      const lastInPeriod = mine.length ? mine[mine.length - 1].created_at : null;
+      learning.push({
+        repId: p.id,
+        repName: p.name,
+        passedAllTime: progressRows.filter((r) => r.user_id === p.id).length,
+        totalLessons: PRODUCTS.length,
+        testsInPeriod: mine.length,
+        passedInPeriod: new Set(mine.filter((a) => a.passed).map((a) => a.product_slug)).size,
+        avgPctInPeriod: pct.length ? Math.round((pct.reduce((x, y) => x + y, 0) / pct.length) * 100) : null,
+        lastActivity: lastInPeriod,
+      });
+    }
+    learning.sort((a, b) => b.passedAllTime - a.passedAllTime || a.repName.localeCompare(b.repName));
+    for (const a of attemptRows) {
+      learningAttempts.push({
+        at: a.created_at,
+        repName: userName.get(a.user_id) ?? "—",
+        lesson: getProduct(a.product_slug)?.name ?? a.product_slug,
+        score: a.score,
+        total: a.total,
+        passed: a.passed,
+      });
+    }
   }
   const targets: ReportTargetRow[] = targetRepIds
     .map((repId) => {
@@ -462,7 +561,7 @@ export async function getReportData(
   const collected = payments.reduce((s, p) => s + p.amount, 0);
   const outstanding = fulfilledOrders.reduce((s, o) => s + o.due, 0);
   const overdue = fulfilledOrders
-    .filter((o) => o.due > 0 && o.paymentDueDate && new Date(o.paymentDueDate).getTime() < today)
+    .filter((o) => o.due > 0 && o.paymentDueDate && o.paymentDueDate.slice(0, 10) < today)
     .reduce((s, o) => s + o.due, 0);
   const expensesTotal = expenses.reduce((s, e) => s + e.amount, 0);
   const advancesOutstanding = advances
@@ -494,6 +593,8 @@ export async function getReportData(
     travelLogs,
     targets,
     tours,
+    learning,
+    learningAttempts,
     totals: {
       fulfilledValue,
       collected,

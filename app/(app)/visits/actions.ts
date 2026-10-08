@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { attachPhotoIfPresent } from "@/lib/photos";
+import { todayIST } from "@/lib/date-range";
 
 export async function createVisit(formData: FormData) {
   const session = await getSession();
@@ -18,7 +19,7 @@ export async function createVisit(formData: FormData) {
   const follow_up_required = formData.get("follow_up_required") === "on";
   const next_visit_date = String(formData.get("next_visit_date") || "") || null;
   const visit_date =
-    String(formData.get("visit_date") || "") || new Date().toISOString().slice(0, 10);
+    String(formData.get("visit_date") || "") || todayIST();
   const latRaw = String(formData.get("latitude") || "").trim();
   const lngRaw = String(formData.get("longitude") || "").trim();
   const latitude = latRaw ? Number(latRaw) : null;
