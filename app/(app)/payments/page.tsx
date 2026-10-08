@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { EmptyState } from "@/components/EmptyState";
 import { formatCurrency, isOverdue } from "@/lib/utils";
+import { fetchAll, sumPayments } from "@/lib/fetch-all";
 import { PaymentRow, type DueOrder } from "./PaymentRow";
 
 export const dynamic = "force-dynamic";
@@ -20,38 +21,32 @@ export default async function PaymentsPage({
   const { filter } = await searchParams;
 
   const repId = getRepScope(session);
-  const ordersQuery = supabaseAdmin
-    .from("av_orders")
-    .select("id, product, amount, payment_due_date, created_at, customer_id, av_customers(name)")
-    .eq("status", "fulfilled")
-    .not("amount", "is", null)
-    .order("created_at", { ascending: false })
-    // Bounded like every other list page. 300 fulfilled orders is well
-    // beyond what a 5-person team accumulates between cleanups, and this
-    // page only needs the *outstanding* ones anyway (filtered below) —
-    // the oldest-first ordering combined with this cap means a very old
-    // unpaid balance could in theory scroll out of range over years of
-    // use; worth revisiting with real pagination if that ever happens.
-    .limit(300);
-  if (repId) ordersQuery.eq("rep_id", repId);
-  const { data: orders } = await ordersQuery;
-
-  const orderIds = (orders ?? []).map((o) => o.id);
-  const { data: payments } = orderIds.length
-    ? await supabaseAdmin.from("av_payments").select("order_id, amount").in("order_id", orderIds)
-    : { data: [] as { order_id: string; amount: number }[] };
+  // Every fulfilled order, newest first, with its payments embedded — one
+  // query instead of a long ?order_id=in.(...) URL (which breaks past a
+  // couple of hundred orders), and paged so a very old unpaid balance is
+  // never cut off by a row cap. Only the outstanding ones are shown below.
+  const { data: orders } = await fetchAll((from, to) => {
+    let q = supabaseAdmin
+      .from("av_orders")
+      .select("id, product, amount, payment_due_date, created_at, customer_id, av_customers(name), av_payments(amount)")
+      .eq("status", "fulfilled")
+      .not("amount", "is", null)
+      .order("created_at", { ascending: false })
+      .order("id");
+    if (repId) q = q.eq("rep_id", repId);
+    return q.range(from, to);
+  });
 
   const paidByOrder = new Map<string, number>();
-  for (const p of payments ?? []) {
-    paidByOrder.set(p.order_id, (paidByOrder.get(p.order_id) ?? 0) + p.amount);
-  }
+  for (const o of orders) paidByOrder.set(o.id, sumPayments(o.av_payments));
 
   const dueOrders: DueOrder[] = (orders ?? []).map((o) => {
     const paid = paidByOrder.get(o.id) ?? 0;
     return {
       id: o.id,
       customerId: o.customer_id,
-      // @ts-expect-error joined relation
+      // @ts-expect-error many-to-one embed is an object at runtime; the
+      // untyped client infers an array.
       customerName: o.av_customers?.name ?? "Customer",
       product: o.product,
       amount: o.amount ?? 0,

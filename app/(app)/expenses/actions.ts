@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/session";
 import { attachPhotoIfPresent } from "@/lib/photos";
+import { todayIST } from "@/lib/date-range";
 
 export async function createExpense(formData: FormData) {
   const session = await getSession();
@@ -14,7 +15,7 @@ export async function createExpense(formData: FormData) {
   const amount = Number(formData.get("amount") || 0);
   const note = String(formData.get("note") || "").trim() || null;
   const expense_date =
-    String(formData.get("expense_date") || "") || new Date().toISOString().slice(0, 10);
+    String(formData.get("expense_date") || "") || todayIST();
 
   if (!category || amount <= 0) {
     return { ok: false, message: "Category and a positive amount are required" };

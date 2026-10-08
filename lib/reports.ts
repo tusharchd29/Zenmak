@@ -1,3 +1,5 @@
+import { dayStart, dayEnd, todayIST } from "./date-range";
+import { fetchAll, sumPayments } from "./fetch-all";
 import { supabaseAdmin } from "./supabase-admin";
 import { getRepScope } from "./data";
 import { getEffectiveTargets } from "./targets";
@@ -165,12 +167,6 @@ export type ReportData = {
   };
 };
 
-function dayStart(date: string) {
-  return `${date}T00:00:00.000Z`;
-}
-function dayEnd(date: string) {
-  return `${date}T23:59:59.999Z`;
-}
 
 /**
  * Which rep_ids a report should be scoped to. A rep always sees only their
@@ -210,15 +206,17 @@ export async function getReportData(
     .select("id, visit_date, purpose, discussion_summary, follow_up_required, next_visit_date, customer_id, rep_id")
     .gte("visit_date", start)
     .lte("visit_date", end)
-    .order("visit_date", { ascending: true });
+    .order("visit_date", { ascending: true })
+    .order("id");
   if (repIds) visitsQuery = visitsQuery.in("rep_id", repIds);
 
   let ordersQuery = supabaseAdmin
     .from("av_orders")
-    .select("id, created_at, product, quantity, amount, status, payment_due_date, customer_id, rep_id")
+    .select("id, created_at, product, quantity, amount, status, payment_due_date, customer_id, rep_id, av_payments(amount)")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) ordersQuery = ordersQuery.in("rep_id", repIds);
 
   let paymentsQuery = supabaseAdmin
@@ -226,7 +224,8 @@ export async function getReportData(
     .select("id, created_at, amount, notes, order_id, customer_id, rep_id")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) paymentsQuery = paymentsQuery.in("rep_id", repIds);
 
   let expensesQuery = supabaseAdmin
@@ -234,7 +233,8 @@ export async function getReportData(
     .select("id, expense_date, category, amount, note, rep_id")
     .gte("expense_date", start)
     .lte("expense_date", end)
-    .order("expense_date", { ascending: true });
+    .order("expense_date", { ascending: true })
+    .order("id");
   if (repIds) expensesQuery = expensesQuery.in("rep_id", repIds);
 
   let advancesQuery = supabaseAdmin
@@ -242,7 +242,8 @@ export async function getReportData(
     .select("id, created_at, amount, status, settled_at, customer_id, rep_id")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) advancesQuery = advancesQuery.in("rep_id", repIds);
 
   let repAdvancesQuery = supabaseAdmin
@@ -250,7 +251,8 @@ export async function getReportData(
     .select("id, given_at, amount, purpose, rep_id")
     .gte("given_at", start)
     .lte("given_at", end)
-    .order("given_at", { ascending: true });
+    .order("given_at", { ascending: true })
+    .order("id");
   if (repIds) repAdvancesQuery = repAdvancesQuery.in("rep_id", repIds);
 
   let claimsQuery = supabaseAdmin
@@ -258,7 +260,8 @@ export async function getReportData(
     .select("id, created_at, amount, status, notes, rep_id")
     .gte("created_at", dayStart(start))
     .lte("created_at", dayEnd(end))
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id");
   if (repIds) claimsQuery = claimsQuery.in("rep_id", repIds);
 
   let travelQuery = supabaseAdmin
@@ -266,7 +269,8 @@ export async function getReportData(
     .select("id, travel_date, distance_km, rate_per_km, rep_id")
     .gte("travel_date", start)
     .lte("travel_date", end)
-    .order("travel_date", { ascending: true });
+    .order("travel_date", { ascending: true })
+    .order("id");
   if (repIds) travelQuery = travelQuery.in("rep_id", repIds);
 
   let toursQuery = supabaseAdmin
@@ -274,7 +278,8 @@ export async function getReportData(
     .select("id, week_start, zone, rep_id")
     .gte("week_start", start)
     .lte("week_start", end)
-    .order("week_start", { ascending: true });
+    .order("week_start", { ascending: true })
+    .order("id");
   if (repIds) toursQuery = toursQuery.in("rep_id", repIds);
 
   const [
@@ -288,32 +293,31 @@ export async function getReportData(
     travelRes,
     toursRes,
   ] = await Promise.all([
-    visitsQuery,
-    ordersQuery,
-    paymentsQuery,
-    expensesQuery,
-    advancesQuery,
-    repAdvancesQuery,
-    claimsQuery,
-    travelQuery,
-    toursQuery,
+    // Every section is paged past Supabase's 1,000-row response cap (a
+    // year-long report can exceed it). The secondary order on id keeps the
+    // pages stable when several rows share a date; range() overwrites
+    // offset/limit on the builder and each await re-fetches.
+    fetchAll((from, to) => visitsQuery.range(from, to)),
+    fetchAll((from, to) => ordersQuery.range(from, to)),
+    fetchAll((from, to) => paymentsQuery.range(from, to)),
+    fetchAll((from, to) => expensesQuery.range(from, to)),
+    fetchAll((from, to) => advancesQuery.range(from, to)),
+    fetchAll((from, to) => repAdvancesQuery.range(from, to)),
+    fetchAll((from, to) => claimsQuery.range(from, to)),
+    fetchAll((from, to) => travelQuery.range(from, to)),
+    fetchAll((from, to) => toursQuery.range(from, to)),
   ]);
 
   const orderRows = ordersRes.data ?? [];
-  const orderIds = orderRows.map((o) => o.id);
 
   // Payments against these orders (not just payments *recorded* in the
-  // window) determine how much of each order is still due, so this is a
-  // second, unscoped-by-date query.
-  const { data: allPaymentsForOrders } = orderIds.length
-    ? await supabaseAdmin.from("av_payments").select("order_id, amount").in("order_id", orderIds)
-    : { data: [] as { order_id: string; amount: number }[] };
+  // window) determine how much of each order is still due — embedded in the
+  // orders query above rather than a long ?order_id=in.(...) lookup, which
+  // fails once a report spans a few hundred orders.
   const paidByOrder = new Map<string, number>();
-  for (const p of allPaymentsForOrders ?? []) {
-    paidByOrder.set(p.order_id, (paidByOrder.get(p.order_id) ?? 0) + p.amount);
-  }
+  for (const o of orderRows) paidByOrder.set(o.id, sumPayments((o as { av_payments?: { amount: number }[] }).av_payments));
 
-  const today = new Date().setHours(0, 0, 0, 0);
+  const today = todayIST();
 
   const orders: ReportOrder[] = orderRows.map((o) => {
     const paid = paidByOrder.get(o.id) ?? 0;
@@ -462,7 +466,7 @@ export async function getReportData(
   const collected = payments.reduce((s, p) => s + p.amount, 0);
   const outstanding = fulfilledOrders.reduce((s, o) => s + o.due, 0);
   const overdue = fulfilledOrders
-    .filter((o) => o.due > 0 && o.paymentDueDate && new Date(o.paymentDueDate).getTime() < today)
+    .filter((o) => o.due > 0 && o.paymentDueDate && o.paymentDueDate.slice(0, 10) < today)
     .reduce((s, o) => s + o.due, 0);
   const expensesTotal = expenses.reduce((s, e) => s + e.amount, 0);
   const advancesOutstanding = advances

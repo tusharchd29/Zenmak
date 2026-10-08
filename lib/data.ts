@@ -1,13 +1,10 @@
 import { supabaseAdmin } from "./supabase-admin";
 import type { Session } from "./session";
 import type { DateRange } from "./date-range";
-import { dayStart, dayEnd } from "./date-range";
+import { dayStart, dayEnd, monthStartIST, nextMonthStart, todayIST } from "./date-range";
 import { getEffectiveTargets } from "./targets";
 import { ZONES, type Zone } from "./utils";
-
-function currentMonthStart() {
-  return `${new Date().toISOString().slice(0, 7)}-01`;
-}
+import { fetchAll, sumPayments } from "./fetch-all";
 
 export function getRepScope(session: Session) {
   return session.role === "owner" ? null : session.userId;
@@ -60,12 +57,30 @@ export async function getDashboardStats(session: Session, range?: DateRange) {
   if (range?.from) visitsQuery.gte("visit_date", range.from);
   if (range?.to) visitsQuery.lte("visit_date", range.to);
 
-  const ordersQuery = supabaseAdmin
-    .from("av_orders")
-    .select("id, status, amount, rep_id");
-  if (repId) ordersQuery.eq("rep_id", repId);
-  if (range?.from) ordersQuery.gte("created_at", dayStart(range.from));
-  if (range?.to) ordersQuery.lte("created_at", dayEnd(range.to));
+  // Paged (fetchAll): these rows are summed, and Supabase caps a single
+  // response at 1,000 rows.
+  const ordersQuery = fetchAll<{ id: string; status: string; amount: number | null; rep_id: string }>((from, to) => {
+    let q = supabaseAdmin.from("av_orders").select("id, status, amount, rep_id").order("id");
+    if (repId) q = q.eq("rep_id", repId);
+    if (range?.from) q = q.gte("created_at", dayStart(range.from));
+    if (range?.to) q = q.lte("created_at", dayEnd(range.to));
+    return q.range(from, to);
+  });
+
+  // Target progress is monthly: orders FULFILLED this Indian calendar month
+  // (by fulfilled_at), whatever date range the rest of the dashboard shows.
+  const thisMonth = monthStartIST();
+  const monthOrdersQuery = fetchAll<{ id: string; amount: number | null; rep_id: string }>((from, to) => {
+    let q = supabaseAdmin
+      .from("av_orders")
+      .select("id, amount, rep_id")
+      .eq("status", "fulfilled")
+      .gte("fulfilled_at", dayStart(thisMonth))
+      .lt("fulfilled_at", dayStart(nextMonthStart(thisMonth)))
+      .order("id");
+    if (repId) q = q.eq("rep_id", repId);
+    return q.range(from, to);
+  });
 
   const customersQuery = supabaseAdmin
     .from("av_customers")
@@ -77,8 +92,8 @@ export async function getDashboardStats(session: Session, range?: DateRange) {
       ? supabaseAdmin.from("av_users").select("id, name, role").eq("role", "rep")
       : null;
 
-  const [{ count: visitsCount }, { data: orders }, { count: customersCount }, repUsersResult] =
-    await Promise.all([visitsQuery, ordersQuery, customersQuery, repUsersQuery]);
+  const [{ count: visitsCount }, { data: orders }, { data: monthOrders }, { count: customersCount }, repUsersResult] =
+    await Promise.all([visitsQuery, ordersQuery, monthOrdersQuery, customersQuery, repUsersQuery]);
   const users = repUsersResult?.data ?? [];
 
   const fulfilledOrders = (orders ?? []).filter((o) => o.status === "fulfilled");
@@ -94,7 +109,7 @@ export async function getDashboardStats(session: Session, range?: DateRange) {
   // lib/targets.ts) — "this month" for the dashboard is always the current
   // calendar month, independent of whatever date range the person has
   // filtered the rest of the dashboard to.
-  const thisMonth = currentMonthStart();
+  const monthFulfilledTotal = monthOrders.reduce((sum, o) => sum + (o.amount ?? 0), 0);
   const targetRepIds = repId ? [repId] : users.map((u) => u.id);
   const effectiveTargets = await getEffectiveTargets(targetRepIds, thisMonth);
   const targetTotal = Array.from(effectiveTargets.values()).reduce(
@@ -103,7 +118,7 @@ export async function getDashboardStats(session: Session, range?: DateRange) {
   );
   const achievementPct =
     targetTotal > 0
-      ? Math.min(100, Math.round((fulfilledTotal / targetTotal) * 100))
+      ? Math.min(100, Math.round((monthFulfilledTotal / targetTotal) * 100))
       : 0;
 
   let repBreakdown: Array<{
@@ -115,9 +130,7 @@ export async function getDashboardStats(session: Session, range?: DateRange) {
 
   if (session.role === "owner") {
     repBreakdown = users.map((u) => {
-      const userOrders = (orders ?? []).filter(
-        (o) => o.rep_id === u.id && o.status === "fulfilled",
-      );
+      const userOrders = monthOrders.filter((o) => o.rep_id === u.id);
       const fulfilled = userOrders.reduce((sum, o) => sum + (o.amount ?? 0), 0);
       const target = effectiveTargets.get(u.id)?.amount ?? 0;
       return { repId: u.id, name: u.name, fulfilled, target };
@@ -139,25 +152,25 @@ export async function getDashboardStats(session: Session, range?: DateRange) {
 export async function getPaymentDues(session: Session) {
   const repId = getRepScope(session);
 
-  const ordersQuery = supabaseAdmin
-    .from("av_orders")
-    .select("id, amount, payment_due_date")
-    .eq("status", "fulfilled")
-    .not("amount", "is", null);
-  if (repId) ordersQuery.eq("rep_id", repId);
-  const { data: orders } = await ordersQuery;
-
-  const orderIds = (orders ?? []).map((o) => o.id);
-  const { data: payments } = orderIds.length
-    ? await supabaseAdmin.from("av_payments").select("order_id, amount").in("order_id", orderIds)
-    : { data: [] as { order_id: string; amount: number }[] };
+  // Payments are embedded per order (one query, no long id list in the URL)
+  // and the orders are paged, since every row is summed.
+  const { data: orders } = await fetchAll<{ id: string; amount: number | null; payment_due_date: string | null; av_payments: { amount: number }[] }>(
+    (from, to) => {
+      let q = supabaseAdmin
+        .from("av_orders")
+        .select("id, amount, payment_due_date, av_payments(amount)")
+        .eq("status", "fulfilled")
+        .not("amount", "is", null)
+        .order("id");
+      if (repId) q = q.eq("rep_id", repId);
+      return q.range(from, to);
+    },
+  );
 
   const paidByOrder = new Map<string, number>();
-  for (const p of payments ?? []) {
-    paidByOrder.set(p.order_id, (paidByOrder.get(p.order_id) ?? 0) + p.amount);
-  }
+  for (const o of orders) paidByOrder.set(o.id, sumPayments(o.av_payments));
 
-  const today = new Date().setHours(0, 0, 0, 0);
+  const today = todayIST();
   let totalDue = 0;
   let overdueTotal = 0;
   let outstandingCount = 0;
@@ -169,7 +182,7 @@ export async function getPaymentDues(session: Session) {
     if (due > 0) {
       totalDue += due;
       outstandingCount += 1;
-      if (o.payment_due_date && new Date(o.payment_due_date).getTime() < today) {
+      if (o.payment_due_date && o.payment_due_date.slice(0, 10) < today) {
         overdueTotal += due;
         overdueCount += 1;
       }
@@ -238,8 +251,12 @@ export async function getRepAdvanceReconciliation(session: Session): Promise<{
     .order("given_at", { ascending: false });
   if (repId) advancesQuery.eq("rep_id", repId);
 
-  const expensesQuery = supabaseAdmin.from("av_expenses").select("rep_id, amount");
-  if (repId) expensesQuery.eq("rep_id", repId);
+  // Every expense is summed against advances — page past the 1,000-row cap.
+  const expensesQuery = fetchAll<{ rep_id: string; amount: number }>((from, to) => {
+    let q = supabaseAdmin.from("av_expenses").select("rep_id, amount").order("id");
+    if (repId) q = q.eq("rep_id", repId);
+    return q.range(from, to);
+  });
 
   const [{ data: advances }, { data: expenses }] = await Promise.all([advancesQuery, expensesQuery]);
 

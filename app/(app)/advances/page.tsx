@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { ActionForm } from "@/components/ActionForm";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ClaimsSection, type Claim } from "./ClaimsSection";
+import { todayIST } from "@/lib/date-range";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +139,7 @@ export default async function AdvancesPage() {
                   type="date"
                   name="given_at"
                   className="input-field"
-                  defaultValue={new Date().toISOString().slice(0, 10)}
+                  defaultValue={todayIST()}
                 />
               </div>
             </div>

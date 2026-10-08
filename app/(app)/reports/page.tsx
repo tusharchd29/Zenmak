@@ -5,20 +5,18 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { Icon } from "@/components/icon";
 import { REPORT_SECTIONS, REPORT_SECTION_LABEL } from "@/lib/reports";
+import { monthStartIST, todayIST } from "@/lib/date-range";
 
 export const dynamic = "force-dynamic";
 
-function isoDate(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
 
 export default async function ReportsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   const isOwner = session.role === "owner";
 
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const today = todayIST();
+  const monthStart = monthStartIST();
 
   const { data: reps } = isOwner
     ? await supabaseAdmin.from("av_users").select("id, name").eq("role", "rep").order("name")
@@ -56,8 +54,8 @@ export default async function ReportsPage() {
                 type="date"
                 name="start"
                 required
-                max={isoDate(now)}
-                defaultValue={isoDate(monthStart)}
+                max={today}
+                defaultValue={monthStart}
                 className="input-field"
               />
             </div>
@@ -67,8 +65,8 @@ export default async function ReportsPage() {
                 type="date"
                 name="end"
                 required
-                max={isoDate(now)}
-                defaultValue={isoDate(now)}
+                max={today}
+                defaultValue={today}
                 className="input-field"
               />
             </div>

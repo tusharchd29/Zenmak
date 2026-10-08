@@ -7,13 +7,14 @@ import { getSession } from "@/lib/session";
 import { assertCanAccessRow, assertCanUseCustomer } from "@/lib/access";
 import { attachPhotoIfPresent } from "@/lib/photos";
 import { getRateForDate } from "@/lib/rates";
+import { todayIST } from "@/lib/date-range";
 
 export async function createTravelLog(formData: FormData) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const travel_date =
-    String(formData.get("travel_date") || "") || new Date().toISOString().slice(0, 10);
+    String(formData.get("travel_date") || "") || todayIST();
   const start_km = Number(formData.get("start_km") || 0);
   const end_km = Number(formData.get("end_km") || 0);
 
@@ -63,7 +64,7 @@ export async function setRatePeriod(formData: FormData) {
 
   const rate_per_km = Number(formData.get("rate_per_km") || 0);
   const effective_from =
-    String(formData.get("effective_from") || "") || new Date().toISOString().slice(0, 10);
+    String(formData.get("effective_from") || "") || todayIST();
 
   if (!rate_per_km || rate_per_km <= 0) {
     return { ok: false, message: "Enter a rate greater than zero" };
