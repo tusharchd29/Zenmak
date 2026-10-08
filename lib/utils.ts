@@ -92,9 +92,13 @@ export function isOverdue(dueDate: string | null | undefined): boolean {
 /** Whole days between a past timestamp and now (0 for "today"). */
 export function daysSince(value: string | null | undefined): number | null {
   if (!value) return null;
-  const then = new Date(value).getTime();
-  if (Number.isNaN(then)) return null;
-  return Math.max(0, Math.floor((Date.now() - then) / 86_400_000));
+  const then = new Date(value);
+  if (Number.isNaN(then.getTime())) return null;
+  // Whole India calendar days, not 24-hour blocks: something done at 11 pm
+  // yesterday is "1 day ago", not "today".
+  const dayNumber = (isoDay: string) => Date.UTC(+isoDay.slice(0, 4), +isoDay.slice(5, 7) - 1, +isoDay.slice(8, 10)) / 86_400_000;
+  const thenDay = value.length <= 10 ? value : todayIST(then);
+  return Math.max(0, dayNumber(todayIST()) - dayNumber(thenDay));
 }
 
 /**
