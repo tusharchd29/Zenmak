@@ -577,6 +577,14 @@ const dict: Record<string, string> = {
   "Fulfilled {n}d ago": "{n} రోజుల క్రితం పూర్తైంది",
   "{status} today": "ఈరోజు {status}",
   "{n}d in {status}": "{n} రోజులుగా {status}",
+  "Location saved": "లొకేషన్ సేవ్ అయింది",
+  "No location yet.": "ఇంకా లొకేషన్ లేదు.",
+  "Update": "అప్‌డేట్ చేయండి",
+  "Paste a Google Maps link first.": "ముందుగా Google Maps లింక్ పేస్ట్ చేయండి.",
+  "Couldn't find a location in that link.": "ఈ లింక్‌లో లొకేషన్ దొరకలేదు.",
+  "Paste Google Maps link": "Google Maps లింక్ పేస్ట్ చేయండి",
+  "Finding…": "వెతుకుతోంది…",
+  "Find": "వెతకండి",
 };
 
 export default dict;

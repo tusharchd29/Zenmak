@@ -58,7 +58,7 @@ export default async function NewCustomerPage() {
             />
           </div>
           <ZoneStateSelect statesByZone={statesByZone} />
-          <LocationCapture label={t("Location")} />
+          <LocationCapture label={t("Location")} allowMapsLink={session.role === "owner"} />
           <SubmitButton>{t("Save customer")}</SubmitButton>
         </ActionForm>
       </Card>

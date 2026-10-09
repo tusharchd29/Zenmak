@@ -577,6 +577,14 @@ const dict: Record<string, string> = {
   "Fulfilled {n}d ago": "{n} দিন আগে ডেলিভার্ড",
   "{status} today": "আজ {status}",
   "{n}d in {status}": "{n} দিন ধরে {status}",
+  "Location saved": "লোকেশন সেভ হয়েছে",
+  "No location yet.": "এখনও কোনো লোকেশন নেই।",
+  "Update": "আপডেট করুন",
+  "Paste a Google Maps link first.": "আগে Google Maps লিঙ্ক পেস্ট করুন।",
+  "Couldn't find a location in that link.": "এই লিঙ্কে লোকেশন পাওয়া যায়নি।",
+  "Paste Google Maps link": "Google Maps লিঙ্ক পেস্ট করুন",
+  "Finding…": "খোঁজা হচ্ছে…",
+  "Find": "খুঁজুন",
 };
 
 export default dict;
