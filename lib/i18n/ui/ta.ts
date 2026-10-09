@@ -577,6 +577,14 @@ const dict: Record<string, string> = {
   "Fulfilled {n}d ago": "{n} நாள் முன் டெலிவரி ஆனது",
   "{status} today": "இன்று {status}",
   "{n}d in {status}": "{status} நிலையில் {n} நாள்",
+  "Location saved": "இருப்பிடம் சேமிக்கப்பட்டது",
+  "No location yet.": "இன்னும் இருப்பிடம் இல்லை.",
+  "Update": "புதுப்பி",
+  "Paste a Google Maps link first.": "முதலில் Google Maps இணைப்பை ஒட்டவும்.",
+  "Couldn't find a location in that link.": "இந்த இணைப்பில் இருப்பிடம் கிடைக்கவில்லை.",
+  "Paste Google Maps link": "Google Maps இணைப்பை ஒட்டவும்",
+  "Finding…": "தேடுகிறது…",
+  "Find": "தேடு",
 };
 
 export default dict;

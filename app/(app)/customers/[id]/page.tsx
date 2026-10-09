@@ -7,6 +7,7 @@ import { StatusPill } from "@/components/StatusPill";
 import { EditableCard } from "../../_shared/EditableCard";
 import { CustomerEditForm } from "../CustomerEditForm";
 import { CustomerContacts } from "../CustomerContacts";
+import { CustomerLocation } from "../CustomerLocation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { getT } from "@/lib/i18n";
 
@@ -25,7 +26,7 @@ export default async function CustomerDetailPage({
 
   let customerQuery = supabaseAdmin
     .from("av_customers")
-    .select("id, name, phone, address, segment, zone, state, rep_id")
+    .select("id, name, phone, address, segment, zone, state, rep_id, latitude, longitude")
     .eq("id", id);
   if (repId) customerQuery = customerQuery.eq("rep_id", repId);
   const { data: customer } = await customerQuery.maybeSingle();
@@ -65,6 +66,16 @@ export default async function CustomerDetailPage({
       <PageHeader title={customer.name} subtitle={customer.segment ?? t("General")} />
 
       <CustomerEditForm customer={customer} statesByZone={statesByZone} />
+
+      <CustomerLocation
+        customerId={id}
+        initial={
+          customer.latitude != null && customer.longitude != null
+            ? { lat: customer.latitude, lng: customer.longitude }
+            : null
+        }
+        canEdit={session.role === "owner"}
+      />
 
       <CustomerContacts customerId={id} contacts={contacts ?? []} />
 
