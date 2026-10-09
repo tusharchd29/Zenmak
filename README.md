@@ -36,7 +36,7 @@ a role (`owner` or `rep`). Update PINs before rolling out to the real team.
 
 ## Live deployment
 
-https://zenmax.vercel.app
+https://zenmak.vercel.app
 
 ## Product Master, Learning & brochures
 
