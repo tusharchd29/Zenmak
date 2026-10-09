@@ -1,4 +1,4 @@
--- Allvet schema — all tables prefixed av_ to share a Supabase project safely
+-- Zenmak schema — all tables prefixed av_ to share a Supabase project safely
 -- alongside other apps. No Supabase Auth is used; access control happens in
 -- the app's server actions (see lib/session.ts, lib/data.ts), not in RLS.
 --
